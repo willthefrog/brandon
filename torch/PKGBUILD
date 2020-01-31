@@ -1,0 +1,184 @@
+# -*- mode: sh-mode; tab-width: 2; -*-
+# Maintainer: Yang Zhang <yangzhang@live.com>
+# Upstream URL: https://github.com/pytorch/pytorch
+
+pkgbase=pytorch
+pkgname=(torch-runtime-cuda-git python-torch-cuda-git)
+pkgver=20200112.r22567.14593f077
+pkgrel=1
+pkgdesc="Tensors and Dynamic neural networks in Python with strong GPU acceleration"
+arch=('x86_64')
+url="https://pytorch.org/"
+license=('BSD')
+makedepends=('git' 'ninja' 'cuda' 'cudnn' 'nccl' 'cmake' 'python-numpy' 'python-setuptools' 'python-yaml')
+source=("${pkgbase}::git+https://github.com/pytorch/pytorch.git")
+md5sums=('SKIP')
+
+pkgver() {
+  cd "$pkgbase"
+  echo "$(git log -1 --format="%cd" --date=short | sed 's|-||g').r$(git rev-list --count HEAD)".$(git describe --always | sed 's/.*-//g')
+}
+
+prepare() {
+  cd "$pkgbase"
+  git submodule update --init --recursive
+
+  cp setup.py setup3.py
+  sed -i "s/CMake()/CMake('build3')/g" setup3.py
+  sed -i 's/"build"/"build3"/g' setup3.py  # caffe2 build dir
+
+  sed -i "/^build$/d" .gitignore  # do not remove build dir when clean
+
+  patch -p1  << __EOF__
+--- a/cmake/public/cuda.cmake
++++ b/cmake/public/cuda.cmake
+@@ -21,9 +21,6 @@ list(APPEND CMAKE_MODULE_PATH \${CMAKE_CURRENT_LIST_DIR}/../Modules_CUDA_fix)
+ # More details can be found in the following links.
+ # https://github.com/pytorch/pytorch/issues/20635
+ # https://github.com/pytorch/pytorch/issues/17108
+-if (NOT MSVC)
+-  set(CUDA_USE_STATIC_CUDA_RUNTIME OFF CACHE INTERNAL "")
+-endif()
+
+ # Find CUDA.
+ find_package(CUDA)
+
+--- a/torch/cuda/__init__.py
++++ b/torch/cuda/__init__.py
+@@ -76,7 +76,7 @@ def _load_cudart():
+     if platform.system() == 'Windows':
+         lib = find_cuda_windows_lib()
+     else:
+-        lib = ctypes.cdll.LoadLibrary(None)
++        lib = ctypes.cdll.LoadLibrary('libcudart.so')
+     if hasattr(lib, 'cudaGetErrorName'):
+         return lib
+__EOF__
+
+
+# re-enable `RTLD_GLOBAL`, see
+# https://github.com/pytorch/pytorch/pull/31162
+  patch -p1  << __EOF__
+--- a/torch/_utils_internal.py
++++ b/torch/_utils_internal.py
+@@ -54,4 +54,4 @@ def get_source_lines_and_file(obj):
+
+ TEST_MASTER_ADDR = '127.0.0.1'
+ TEST_MASTER_PORT = 29500
+-USE_RTLD_GLOBAL_WITH_LIBTORCH = False
++USE_RTLD_GLOBAL_WITH_LIBTORCH = True
+__EOF__
+
+# set include path when checking for nccl version
+  patch -p1  << __EOF__
+--- a/cmake/Modules/FindNCCL.cmake
++++ b/cmake/Modules/FindNCCL.cmake
+@@ -72,6 +72,7 @@ if(NCCL_FOUND)  # obtaining NCCL version and some sanity checks
+       }
+ ")
+     try_run(NCCL_VERSION_MATCHED compile_result \${PROJECT_BINARY_DIR} \${file}
++          CMAKE_FLAGS "-DINCLUDE_DIRECTORIES:STRING=\${NCCL_INCLUDE_DIRS}"
+           RUN_OUTPUT_VARIABLE NCCL_VERSION_FROM_HEADER
+           LINK_LIBRARIES \${NCCL_LIBRARIES})
+     if (NOT NCCL_VERSION_MATCHED)
+__EOF__
+
+}
+
+build() {
+  cd "$pkgbase"
+
+  export CC=/opt/cuda/bin/gcc
+  export CXX=/opt/cuda/bin/g++
+  export CFLAGS="-march=skylake -mtune=generic -O2 -pipe -fstack-protector-strong"
+  export CXXFLAGS="-march=skylake -mtune=generic -O2 -pipe -fstack-protector-strong"
+  export CUDA_BIN_PATH=/opt/cuda
+  export CUDNN_LIB_DIR=/usr/lib
+  export CUDNN_INCLUDE_DIR=/usr/include
+  export TORCH_NVCC_FLAGS="-Xfatbin -compress-all"
+
+  export PYTORCH_BUILD_VERSION=`grep "version = '" setup.py | sed -E "s/version = '(.*)'/\1/"`
+  PYTHON3_INC=`python -c "import sysconfig; print(sysconfig.get_config_vars('INCLUDEPY')[0])"`
+  PYTHON3_LIB=`python -c "import sysconfig; print('/'.join(sysconfig.get_config_vars('LIBDIR', 'INSTSONAME')))"`
+  INSTALL_DIR="$srcdir/$pkgbase/torch"
+
+  cmake -GNinja -B build -S .                    \
+        -DTORCH_CUDA_ARCH_LIST="5.0+PTX;6.1;7.0" \
+        -DCMAKE_INSTALL_PREFIX="/usr"            \
+        -DATEN_NO_TEST=ON                        \
+        -DBUILD_PYTHON=OFF                       \
+        -DBUILD_CUSTOM_PROTOBUF=ON               \
+        -DUSE_CUDA=ON                            \
+        -DUSE_ROCM=OFF                           \
+        -DUSE_NUMPY=OFF                          \
+        -DUSE_MKLDNN=OFF                         \
+        -DUSE_GLOO=OFF                           \
+        -DUSE_STATIC_NCCL=ON
+  cmake --build build -j"$(nproc)"
+  # update ninja timestamp to avoid rebuild generated files
+  touch build/build.ninja
+
+  if [ ! -e build3 ]; then
+    cp -rf build build3
+    rm -rf build3/CMakeCache.txt
+    rm -rf build3/*.ninja
+    rm -rf build3/*.cmake*
+    rm -rf build3/**/*.cmake*
+  fi
+  cmake -GNinja -B build3 -S .                   \
+        -DTORCH_CUDA_ARCH_LIST="5.0+PTX;6.1;7.0" \
+        -DCMAKE_INSTALL_PREFIX=$INSTALL_DIR      \
+        -DATEN_NO_TEST=ON                        \
+        -DBUILD_PYTHON=ON                        \
+        -DPYTHON_EXECUTABLE=`which python`       \
+        -DPYTHON_INCLUDE_DIR=$PYTHON3_INC        \
+        -DPYTHON_LIBRARY=$PYTHON3_LIB            \
+        -DBUILD_ONNX_PYTHON=ON                   \
+        -DUSE_CUDA=ON                            \
+        -DUSE_NUMPY=ON                           \
+        -DBUILD_CUSTOM_PROTOBUF=ON               \
+        -DUSE_SYSTEM_EIGEN_INSTALL=OFF           \
+        -DUSE_ROCM=OFF                           \
+        -DUSE_MPI=OFF                            \
+        -DUSE_MKLDNN=OFF                         \
+        -DUSE_GLOO=OFF                           \
+        -DUSE_SYSTEM_NCCL=ON
+  cmake --build build3 -j"$(nproc)"
+  touch build3/build.ninja
+  python setup3.py build
+}
+
+package_torch-runtime-cuda-git() {
+  provides=('torch-runtime')
+  conflicts=('torch-runtime')
+  depends=('cuda' 'cudnn')
+
+  cd "$pkgbase"
+  DESTDIR="${pkgdir}" cmake --build build -t install
+
+  install -m644 -D LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}
+
+python_site_path() {
+  $1 - <<END
+from __future__ import print_function
+import site
+print(site.getsitepackages()[0])
+END
+}
+
+package_python-torch-cuda-git() {
+  provides=('python-torch')
+  conflicts=('python-torch')
+  depends=('python-future' 'python-numpy' 'python-cffi' 'python-yaml' 'cuda' 'cudnn' 'nccl')
+  optdepends=('python-tqdm: model zoo progress bar')
+
+  cd "$pkgbase"
+  python setup3.py install --skip-build --root="$pkgdir" --optimize=1
+  install -m644 -D LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  # XXX tools/setup_helpers/split_types.py returns full path
+  find "$pkgdir" -type f -iname "*SOURCES.txt" | xargs sed -i "s#$srcdir/$pkgbase/##g"
+
+  rm -rf "$pkgdir/usr/bin"
+  rm -rf "$pkgdir$(python_site_path `which python`)/caffe"
+}

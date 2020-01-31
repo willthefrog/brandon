@@ -1,0 +1,17 @@
+* Brandon
+aka the builder (:wolf:).
+
+This repo contains some =PKGBUILD= files for building Arch Linux packages, mostly for personal use.
+
+[[.github/workflows/build.yml][https://github.com/willthefrog/brandon/workflows/torch/badge.svg]]
+
+** Note about Google Service Account
+- create the [[https://cloud.google.com/iam/docs/creating-managing-service-account-keys][service account key]]
+- encode to base64
+  #+BEGIN_SRC shell
+  cat keyfile.json | base64 -w0  # must disable wrapping
+  #+END_SRC
+- add following secrets
+  + =GCP_SA_EMAIL=: service account email in the key file (not user account email)
+  + =GCP_SA_KEY=: the encoded base64 string
+  + =GCS_BUCKET=: bucket to store built artifact
