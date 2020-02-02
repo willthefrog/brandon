@@ -44,6 +44,11 @@ build() {
   else
     cudnn_header='/usr/include/cudnn.h'
   fi
+  if [ -e '/opt/cuda/include/nccl.h' ]; then
+    nccl_path='/opt/cuda'
+  else
+    nccl_path='/usr'
+  fi
 
   TF_CUDA_COMPUTE_CAPABILITIES=5.0,6.1,7.0                                                         \
   PYTHON_BIN_PATH=/usr/bin/python                                                                  \
@@ -70,7 +75,7 @@ build() {
   TF_CUDA_CLANG=0                                                                                  \
   TF_DOWNLOAD_CLANG=0                                                                              \
   TF_NCCL_VERSION=''                                                                               \
-  NCCL_INSTALL_PATH=/usr                                                                           \
+  NCCL_INSTALL_PATH=${nccl_path}                                                                   \
   GCC_HOST_COMPILER_PATH=/opt/cuda/bin/gcc                                                         \
   HOST_CXX_COMPILER_PATH=/opt/cuda/bin/g++                                                         \
   TF_CUDA_PATHS=/opt/cuda,/usr/lib,/usr                                                            \
