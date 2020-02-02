@@ -50,14 +50,14 @@ build() {
     nccl_path='/usr'
   fi
 
-  TF_CUDA_COMPUTE_CAPABILITIES=5.0,6.1,7.0                                                         \
+  TF_CUDA_COMPUTE_CAPABILITIES=6.1,7.0                                                             \
   PYTHON_BIN_PATH=/usr/bin/python                                                                  \
   USE_DEFAULT_PYTHON_LIB_PATH=1                                                                    \
-  TF_NEED_CUDA=1                                                                                   \
-  TF_NEED_JEMALLOC=1                                                                               \
-  TF_ENABLE_XLA=1                                                                                  \
-  TF_NEED_GCP=1                                                                                    \
   TF_IGNORE_MAX_BAZEL_VERSION=1                                                                    \
+  TF_NEED_CUDA=1                                                                                   \
+  TF_ENABLE_XLA=0                                                                                  \
+  TF_NEED_JEMALLOC=0                                                                               \
+  TF_NEED_GCP=0                                                                                    \
   TF_NEED_KAFKA=0                                                                                  \
   TF_NEED_OPENCL_SYCL=0                                                                            \
   TF_NEED_AWS=0                                                                                    \
