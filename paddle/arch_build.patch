@@ -1,0 +1,298 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 5846dc22c3..0e0bc400bb 100755
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -83,6 +83,7 @@ option(WITH_XBYAK       "Compile with xbyak support"                    ON)
+ option(WITH_CONTRIB     "Compile the third-party contributation"        OFF)
+ option(REPLACE_ENFORCE_GLOG "Replace PADDLE_ENFORCE with glog/CHECK for better debug." OFF)
+ option(WITH_GRPC     "Use grpc as the default rpc framework"            ${WITH_DISTRIBUTE})
++option(WITH_SYSTEM_GRPC  "Use system grpc instead of third party"       OFF)
+ option(WITH_INFERENCE_API_TEST   "Test fluid inference C++ high-level api interface"  OFF)
+ option(WITH_HIGH_LEVEL_API_TEST   "Test fluid python high-level api interface"  OFF)
+ option(PY_VERSION       "Compile PaddlePaddle with python3 support"     ${PY_VERSION})
+@@ -195,6 +196,10 @@ else()
+     message(WARNING "On inference mode, will take place some specific optimization. Turn on the ON_INFER flag when building inference_lib only.")
+ endif()
+ 
++if (WITH_SYSTEM_GRPC)
++    add_definitions(-DPADDLE_WITH_SYSTEM_GRPC)
++endif()
++
+ add_subdirectory(paddle)
+ if(WITH_PYTHON)
+     add_subdirectory(python)
+diff --git a/cmake/external/grpc.cmake b/cmake/external/grpc.cmake
+index 536e95c1dc..8c5a434048 100644
+--- a/cmake/external/grpc.cmake
++++ b/cmake/external/grpc.cmake
+@@ -13,6 +13,39 @@
+ # limitations under the License.
+ #
+ 
++IF(NOT WITH_DISTRIBUTE)
++    return()
++ENDIF()
++
++IF(WITH_SYSTEM_GRPC)
++  FIND_PACKAGE(PkgConfig REQUIRED)
++  PKG_CHECK_MODULES(GPR REQUIRED gpr)
++  PKG_CHECK_MODULES(GRPC REQUIRED grpc)
++  PKG_CHECK_MODULES(GRPC_UNSECURE REQUIRED grpc_unsecure)
++  PKG_CHECK_MODULES(GRPC++ REQUIRED grpc++)
++  PKG_CHECK_MODULES(GRPC++_UNSECURE REQUIRED grpc++_unsecure)
++
++  ADD_LIBRARY(extern_grpc INTERFACE IMPORTED GLOBAL)
++  ADD_LIBRARY(gpr INTERFACE IMPORTED GLOBAL)
++  ADD_LIBRARY(grpc INTERFACE IMPORTED GLOBAL)
++  ADD_LIBRARY(grpc_unsecure INTERFACE IMPORTED GLOBAL)
++  ADD_LIBRARY(grpc++ INTERFACE IMPORTED GLOBAL)
++  ADD_LIBRARY(grpc++_unsecure INTERFACE IMPORTED GLOBAL)
++
++  SET_PROPERTY(TARGET extern_grpc PROPERTY IMPORTED_LIBNAME grpc)
++  SET_PROPERTY(TARGET gpr PROPERTY IMPORTED_LIBNAME gpr)
++  SET_PROPERTY(TARGET grpc PROPERTY IMPORTED_LIBNAME grpc)
++  SET_PROPERTY(TARGET grpc_unsecure PROPERTY IMPORTED_LIBNAME grpc_unsecure)
++  SET_PROPERTY(TARGET grpc++ PROPERTY IMPORTED_LIBNAME grpc++)
++  SET_PROPERTY(TARGET grpc++_unsecure PROPERTY IMPORTED_LIBNAME grpc++_unsecure)
++
++  FIND_PROGRAM(GRPC_CPP_PLUGIN NAMES grpc_cpp_plugin)
++  SET(GRPC_INCLUDE_DIR ${GRPC_INCLUDE_DIRS} CACHE PATH "grpc include directory." FORCE)
++
++  ADD_DEPENDENCIES(extern_grpc zlib protobuf)
++  RETURN()
++ENDIF()
++
+ include (ExternalProject)
+ 
+ SET(GRPC_SOURCES_DIR ${THIRD_PARTY_PATH}/grpc)
+diff --git a/cmake/external/openblas.cmake b/cmake/external/openblas.cmake
+index eff73c792a..b18c17c090 100644
+--- a/cmake/external/openblas.cmake
++++ b/cmake/external/openblas.cmake
+@@ -43,7 +43,7 @@ IF(NOT WIN32)
+         INSTALL_DIR         ${CBLAS_INSTALL_DIR}
+         BUILD_IN_SOURCE     1
+         BUILD_COMMAND       make -j$(nproc) ${COMMON_ARGS} ${OPTIONAL_ARGS}
+-        INSTALL_COMMAND     make install NO_SHARED=1 NO_LAPACK=1 PREFIX=<INSTALL_DIR> 
++        INSTALL_COMMAND     make install NO_SHARED=1 NO_LAPACK=1 PREFIX=<INSTALL_DIR>
+         UPDATE_COMMAND      ""
+         CONFIGURE_COMMAND   ""
+     )
+diff --git a/cmake/external/warpctc.cmake b/cmake/external/warpctc.cmake
+index 2a9600dec5..b9cfceb190 100644
+--- a/cmake/external/warpctc.cmake
++++ b/cmake/external/warpctc.cmake
+@@ -56,6 +56,7 @@ ExternalProject_Add(
+                     -DCMAKE_CXX_FLAGS_DEBUG=${CMAKE_CXX_FLAGS_DEBUG}
+                     -DCMAKE_INSTALL_PREFIX=${WARPCTC_INSTALL_DIR}
+                     -DWITH_GPU=${WITH_GPU}
++                    -DCUDA_VERSION=8.0
+                     -DWITH_OMP=${USE_OMP}
+                     -DWITH_TORCH=OFF
+                     -DCMAKE_DISABLE_FIND_PACKAGE_Torch=ON
+diff --git a/cmake/flags.cmake b/cmake/flags.cmake
+index 884e5d45a6..b80c13bd58 100644
+--- a/cmake/flags.cmake
++++ b/cmake/flags.cmake
+@@ -143,13 +143,10 @@ set(COMMON_FLAGS
+     -Werror
+     -Wall
+     -Wextra
+-    -Wnon-virtual-dtor
+-    -Wdelete-non-virtual-dtor
+     -Wno-unused-parameter
+     -Wno-unused-function
+     -Wno-error=literal-suffix
+     -Wno-error=unused-local-typedefs
+-    -Wno-error=parentheses-equality # Warnings in pybind11
+     -Wno-error=ignored-attributes  # Warnings in Eigen, gcc 6.3
+     -Wno-error=terminate  # Warning in PADDLE_ENFORCE
+     -Wno-error=int-in-bool-context # Warning in Eigen gcc 7.2
+@@ -178,8 +175,6 @@ endif(NOT APPLE)
+ set(GPU_COMMON_FLAGS
+     -fPIC
+     -fno-omit-frame-pointer
+-    -Wnon-virtual-dtor
+-    -Wdelete-non-virtual-dtor
+     -Wno-unused-parameter
+     -Wno-unused-function
+     -Wno-error=literal-suffix
+diff --git a/paddle/fluid/framework/ir/coalesce_grad_tensor_pass.h b/paddle/fluid/framework/ir/coalesce_grad_tensor_pass.h
+index 38dc4c99fc..a7022e81ae 100644
+--- a/paddle/fluid/framework/ir/coalesce_grad_tensor_pass.h
++++ b/paddle/fluid/framework/ir/coalesce_grad_tensor_pass.h
+@@ -13,6 +13,7 @@
+ // limitations under the License.
+ #pragma once
+ #include <algorithm>
++#include <cstdint>
+ 
+ namespace paddle {
+ namespace framework {
+diff --git a/paddle/fluid/operators/distributed/grpc/grpc_service.h b/paddle/fluid/operators/distributed/grpc/grpc_service.h
+index 4515229389..b717c07d22 100644
+--- a/paddle/fluid/operators/distributed/grpc/grpc_service.h
++++ b/paddle/fluid/operators/distributed/grpc/grpc_service.h
+@@ -32,11 +32,13 @@
+ //       requests without too much copying of the tensor data.
+ 
+ namespace grpc {
+-class CompletionQueue;
++#ifndef PADDLE_WITH_SYSTEM_GRPC
+ class Channel;
+-class RpcService;
++class CompletionQueue;
+ class ServerCompletionQueue;
+ class ServerContext;
++#endif /* PADDLE_WITH_SYSTEM_GRPC */
++class RpcService;
+ 
+ // Support parsing/unparsing of tensorflow::VariableResponse.
+ // Wire-format is identical to RecvVariableResponse.
+diff --git a/python/paddle/dataset/flowers.py b/python/paddle/dataset/flowers.py
+index 969ad3c922..0f6b9b4058 100644
+--- a/python/paddle/dataset/flowers.py
++++ b/python/paddle/dataset/flowers.py
+@@ -35,7 +35,6 @@ import itertools
+ import functools
+ from .common import download
+ import tarfile
+-import scipy.io as scio
+ from paddle.dataset.image import *
+ from paddle.reader import *
+ from paddle import compat as cpt
+@@ -44,6 +43,13 @@ import numpy as np
+ from multiprocessing import cpu_count
+ import six
+ from six.moves import cPickle as pickle
++
++try:
++    import scipy.io as scio
++except ImportError:
++    import sys
++    sys.stderr.write("scipy not installed, dataset.flowers is unavailable\n")
++
+ __all__ = ['train', 'test', 'valid']
+ 
+ DATA_URL = 'http://paddlemodels.bj.bcebos.com/flowers/102flowers.tgz'
+diff --git a/python/paddle/dataset/mq2007.py b/python/paddle/dataset/mq2007.py
+index d5740f30c8..e02e8006ec 100644
+--- a/python/paddle/dataset/mq2007.py
++++ b/python/paddle/dataset/mq2007.py
+@@ -27,10 +27,15 @@ from __future__ import print_function
+ 
+ import os
+ import functools
+-import rarfile
+ from .common import download
+ import numpy as np
+ 
++try:
++    import rarfile
++except ImportError:
++    import sys
++    sys.stderr.write("rarfile not installed, dataset.mq2007 is unavailable\n")
++
+ # URL = "http://research.microsoft.com/en-us/um/beijing/projects/letor/LETOR4.0/Data/MQ2007.rar"
+ URL = "http://www.bigdatalab.ac.cn/benchmark/upload/download_source/7b6dbbe2-842c-11e4-a536-bcaec51b9163_MQ2007.rar"
+ MD5 = "7be1640ae95c6408dab0ae7207bdc706"
+diff --git a/python/paddle/dataset/sentiment.py b/python/paddle/dataset/sentiment.py
+index 721cb5a819..c16ddaab82 100644
+--- a/python/paddle/dataset/sentiment.py
++++ b/python/paddle/dataset/sentiment.py
+@@ -27,11 +27,16 @@ import collections
+ from itertools import chain
+ 
+ import os
+-import nltk
+-from nltk.corpus import movie_reviews
+ import zipfile
+ from functools import cmp_to_key
+ 
++try:
++    import nltk
++    from nltk.corpus import movie_reviews
++except ImportError:
++    import sys
++    sys.stderr.write("nltk not installed, dataset.sentiment is unavailable\n")
++
+ import paddle.dataset.common
+ 
+ URL = "https://corpora.bj.bcebos.com/movie_reviews%2Fmovie_reviews.zip"
+diff --git a/python/paddle/dataset/voc2012.py b/python/paddle/dataset/voc2012.py
+index 5068893765..4a714e9e6f 100644
+--- a/python/paddle/dataset/voc2012.py
++++ b/python/paddle/dataset/voc2012.py
+@@ -26,7 +26,12 @@ import io
+ import numpy as np
+ from paddle.dataset.common import download
+ from paddle.dataset.image import *
+-from PIL import Image
++
++try:
++    from PIL import Image
++except ImportError:
++    import sys
++    sys.stderr.write("PIL not installed, dataset.voc2012 is unavailable\n")
+ 
+ __all__ = ['train', 'test', 'val']
+ 
+diff --git a/python/paddle/fluid/contrib/slim/core/config.py b/python/paddle/fluid/contrib/slim/core/config.py
+index cbe1c736fe..a49c70244f 100644
+--- a/python/paddle/fluid/contrib/slim/core/config.py
++++ b/python/paddle/fluid/contrib/slim/core/config.py
+@@ -13,7 +13,6 @@
+ # limitations under the License.
+ 
+ import inspect
+-import funcsigs
+ import yaml
+ from collections import OrderedDict
+ from ..prune import *
+@@ -23,6 +22,11 @@ from ..distillation import *
+ from ..searcher import *
+ from ..nas import *
+ 
++try:
++    from inspect import signature
++except ImportError:
++    from funcsigs import signature
++
+ __all__ = ['ConfigFactory']
+ """This factory is used to create instances by loading and parsing configure file with yaml format.
+ """
+@@ -50,7 +54,7 @@ class ConfigFactory(object):
+     def _new_instance(self, name, attrs):
+         if name not in self.instances:
+             class_ = globals()[attrs['class']]
+-            sig = funcsigs.signature(class_.__init__)
++            sig = signature(class_.__init__)
+             keys = [
+                 param.name for param in sig.parameters.values()
+                 if (param.kind == param.POSITIONAL_OR_KEYWORD)
+diff --git a/python/paddle/fluid/contrib/slim/prune/prune_strategy.py b/python/paddle/fluid/contrib/slim/prune/prune_strategy.py
+index bbdebf3e53..e7377737c3 100644
+--- a/python/paddle/fluid/contrib/slim/prune/prune_strategy.py
++++ b/python/paddle/fluid/contrib/slim/prune/prune_strategy.py
+@@ -19,7 +19,6 @@ from ....log_helper import get_logger
+ from .... import layers
+ import prettytable as pt
+ import numpy as np
+-from scipy.optimize import leastsq
+ import copy
+ import re
+ import os
+@@ -27,6 +26,13 @@ import pickle
+ import logging
+ import sys
+ 
++try:
++    from scipy.optimize import leastsq
++except ImportError:
++    import sys
++    sys.stderr.write("scipy not installed, slim is unavailable")
++
++
+ __all__ = ['SensitivePruneStrategy', 'UniformPruneStrategy', 'PruneStrategy']
+ 
+ _logger = get_logger(

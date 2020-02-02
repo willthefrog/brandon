@@ -5,6 +5,7 @@ This repo contains some =PKGBUILD= files for building Arch Linux packages, mostl
 
 [[.github/workflows/torch.yml][https://github.com/willthefrog/brandon/workflows/torch/badge.svg]]
 [[.github/workflows/tensorflow.yml][https://github.com/willthefrog/brandon/workflows/tensorflow/badge.svg]]
+[[.github/workflows/paddle.yml][https://github.com/willthefrog/brandon/workflows/paddle/badge.svg]]
 
 ** Note about Google Service Account
 - create the [[https://cloud.google.com/iam/docs/creating-managing-service-account-keys][service account key]]

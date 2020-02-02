@@ -1,0 +1,37 @@
+name: paddle
+on:
+  push:
+    paths:
+      - paddle/*
+      - .github/workflows/paddle.yml
+  repository_dispatch:
+  schedule:
+    - cron:   '0 0 * * 1'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      GCP_SA_EMAIL: ${{ secrets.GCP_SA_EMAIL }}
+      GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+      GCS_BUCKET: ${{ secrets.GCS_BUCKET }}
+    container:
+      image: 'willthefrog/makepkg'
+      options: --user root
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@master
+    - name: Setup gcloud
+      run: |
+        echo ${GCP_SA_KEY} | base64 -d > /tmp/sa_key.json
+        gcloud auth activate-service-account ${GCP_SA_EMAIL} --key-file=/tmp/sa_key.json
+    - name: Update pacman index
+      run: pacman -Sy
+    - name: Build Package
+      run: |
+        chmod 777 -R .
+        sudo -u arch makepkg -rsf --noconfirm
+      working-directory: ${{ github.workflow }}
+    - name: Upload Package
+      run: |
+        gsutil cp *.zst ${GCS_BUCKET}
+      working-directory: ${{ github.workflow }}

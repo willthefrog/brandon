@@ -1,0 +1,65 @@
+# -*- mode: sh-mode; tab-width: 2; -*-
+# Maintainer: Yang Zhang <yangzhang@live.com>
+
+pkgbase=paddle
+pkgname=python-paddle-cuda-git
+pkgver=20200202.r26250.371f377bea
+pkgrel=1
+pkgdesc='PArallel Distributed Deep LEarning'
+arch=('x86_64')
+url='https://github.com/PaddlePaddle/Paddle'
+license=(apache)
+depends=('grep' 'cuda' 'cudnn' 'nccl' 'grpc' 'hdf5' 'python-numpy' 'python-protobuf'
+        'python-requests' 'python-decorator' 'python-pyaml' 'python-py-cpuinfo'
+        'python-prettytable' 'python-objgraph')
+makedepends=('git' 'cmake' 'patchelf' 'wget' 'python-pip' 'python-wheel')
+optdepends=('python-pillow: for voc2012 dataset'
+            'python-nltk: for sentiment dataset'
+            'python-rarfile: for mq2007 dataset'
+            'python-scipy: for flower dataset and slim')
+source=("${pkgbase}::git+${url}.git" 'arch_build.patch')
+sha512sums=('SKIP' '16d6891c1efa6dfb7c73862605fe312e5da3a76a39e5361c7b10fd1eaa9d75307ba419388dd30d4ff4e007233f4f657e35ecca69296c3a50c22a71188661c370')
+options=('!strip')
+
+pkgver() {
+  cd "${srcdir}/${pkgbase}"
+  echo "$(git log -1 --format="%cd" --date=short | sed 's|-||g').r$(git rev-list --count HEAD)".$(git describe --always | sed 's/.*-//g')
+}
+
+prepare() {
+  cd "$pkgbase"
+  patch -p1 -i ../arch_build.patch
+}
+
+build() {
+  cd "$pkgbase"
+
+  CC=/opt/cuda/bin/gcc \
+  CXX=/opt/cuda/bin/g++ \
+  cmake \
+      -DPY_VERSION=3.8  \
+      -DWITH_DISTRIBUTE=ON \
+      -DWITH_SYSTEM_GRPC=ON \
+      -DWITH_GPU=ON \
+      -DWITH_MKL=OFF \
+      -DWITH_GLOO=OFF \
+      -DWITH_FAST_MATH=ON \
+      -DCUDA_ARCH_NAME=Manual \
+      -DCUDA_ARCH_BIN=60,70,75 \
+      -DWITH_TESTING=OFF \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_C_FLAGS='-march=skylake -Wno-error=maybe-uninitialized -Wno-error=format-truncation= -Wno-error=parentheses -Wno-error=cast-function-type -Wno-error=stringop-truncation -Wno-error=catch-value= ' \
+      -DCMAKE_CXX_FLAGS='-march=skylake -Wno-error=maybe-uninitialized -Wno-error=format-truncation= -Wno-error=parentheses -Wno-error=cast-function-type -Wno-error=stringop-truncation -Wno-error=catch-value= ' \
+      -B build
+  CUDA_HOME='/opt/cuda' cmake --build build -j"$(nproc)"
+}
+
+package() {
+  TMP_PKG=`find "${srcdir}/${pkgbase}/build/python/dist" -name "*.whl"`
+  pip install --ignore-installed --upgrade --root $pkgdir/ $TMP_PKG --no-dependencies --no-warn-script-location
+
+  rm -rf $pkgdir/usr/bin
+  install -m644 -D ${srcdir}/${pkgbase}/LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}
+
+# vim:set ts=2 sw=2 et:
