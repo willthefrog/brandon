@@ -1,0 +1,97 @@
+# -*- mode: sh-mode; tab-width: 2; -*-
+# Maintainer: Yang Zhang <yangzhang@live.com>
+
+pkgbase=tensorflow
+pkgname=python-tensorflow-opt-cuda-git
+pkgver=1.14.0
+pkgrel=1
+pkgdesc="Library for computation using data flow graphs for scalable machine learning"
+url="https://www.tensorflow.org/"
+license=('APACHE')
+arch=('x86_64')
+depends=(cuda cudnn python-protobuf python-h5py python-numpy absl-py python-wrapt python-termcolor
+         python-tensorflow-estimator python-opt_einsum python-astor python-gast
+         python-keras-applications python-keras-preprocessing)
+makedepends=(bazel git gcc ccache python-pip)
+optdepends=('tensorboard: Tensorflow visualization toolkit'
+            'python-pasta: for tf_upgrade_v2 script')
+conflicts=(python-tensorflow)
+provides=(python-tensorflow)
+replaces=(python-tensorflow)
+source=('git+https://github.com/tensorflow/tensorflow'
+        "grpc.patch::https://raw.githubusercontent.com/clearlinux-pkgs/tensorflow/master/Add-grpc-fix-for-gettid.patch")
+md5sums=('SKIP' 'SKIP')
+
+pkgver() {
+  cd "$pkgbase"
+  echo "$(git log -1 --format="%cd" --date=short | sed 's|-||g').r$(git rev-list --count HEAD)".$(git describe --always | sed 's/.*-//g')
+}
+
+prepare() {
+  cd "$pkgbase"
+  # fix grpc build issue
+  # https://github.com/clearlinux/distribution/issues/1151
+  rm -f third_party/Rename-gettid-functions.patch
+  patch -p1 -i ../grpc.patch
+  echo "2.0.0-" > .bazelversion
+}
+
+build() {
+  cd "$pkgbase"
+
+  if [ -e '/opt/cuda/include/cudnn.h' ]; then
+    cudnn_header='/opt/cuda/include/cudnn.h'
+  else
+    cudnn_header='/usr/include/cudnn.h'
+  fi
+
+  TF_CUDA_COMPUTE_CAPABILITIES=5.0,6.1,7.0                                                         \
+  PYTHON_BIN_PATH=/usr/bin/python                                                                  \
+  USE_DEFAULT_PYTHON_LIB_PATH=1                                                                    \
+  TF_NEED_CUDA=1                                                                                   \
+  TF_NEED_JEMALLOC=1                                                                               \
+  TF_ENABLE_XLA=1                                                                                  \
+  TF_NEED_GCP=1                                                                                    \
+  TF_IGNORE_MAX_BAZEL_VERSION=1                                                                    \
+  TF_NEED_KAFKA=0                                                                                  \
+  TF_NEED_OPENCL_SYCL=0                                                                            \
+  TF_NEED_AWS=0                                                                                    \
+  TF_NEED_HDFS=0                                                                                   \
+  TF_NEED_S3=0                                                                                     \
+  TF_NEED_GDR=0                                                                                    \
+  TF_NEED_VERBS=0                                                                                  \
+  TF_NEED_OPENCL=0                                                                                 \
+  TF_NEED_MPI=0                                                                                    \
+  TF_NEED_TENSORRT=0                                                                               \
+  TF_NEED_NGRAPH=0                                                                                 \
+  TF_NEED_IGNITE=0                                                                                 \
+  TF_NEED_ROCM=0                                                                                   \
+  TF_SET_ANDROID_WORKSPACE=0                                                                       \
+  TF_CUDA_CLANG=0                                                                                  \
+  TF_DOWNLOAD_CLANG=0                                                                              \
+  TF_NCCL_VERSION=''                                                                               \
+  NCCL_INSTALL_PATH=/usr                                                                           \
+  GCC_HOST_COMPILER_PATH=/opt/cuda/bin/gcc                                                         \
+  HOST_CXX_COMPILER_PATH=/opt/cuda/bin/g++                                                         \
+  TF_CUDA_PATHS=/opt/cuda,/usr/lib,/usr                                                            \
+  TF_CUDA_VERSION=$(/opt/cuda/bin/nvcc --version | sed -n 's/^.*release \(.*\),.*/\1/p')           \
+  TF_CUDNN_VERSION=$(sed -n 's/^#define CUDNN_MAJOR\s*\(.*\).*/\1/p' ${cudnn_header})              \
+  CC_OPT_FLAGS="-march=skylake -Wl,--as-needed -ffunction-sections"                                \
+  ./configure                                                                                      \
+
+  bazel build --config=v2 --config=opt \
+    --incompatible_no_support_tools_in_action_inputs=false \
+    //tensorflow/tools/pip_package:build_pip_package
+  bazel-bin/tensorflow/tools/pip_package/build_pip_package "${srcdir}"/tmpoptcuda
+}
+
+package() {
+  WHEEL_PACKAGE=$(find "${srcdir}"/tmpoptcuda -name "tensor*.whl")
+  pip install --ignore-installed --upgrade --root "${pkgdir}"/ $WHEEL_PACKAGE --no-dependencies
+
+  rm -rf "${pkgdir}/usr/lib/python$(get_pyver)"/site-packages/tensorflow_core/include
+  rm -rf "${pkgdir}"/usr/bin/tensorboard
+  install -Dm644 LICENSE "${pkgdir}"/usr/share/licenses/${pkgname}/LICENSE
+}
+
+# vim:set ts=2 sw=2 et:
