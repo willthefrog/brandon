@@ -10,7 +10,7 @@ pkgdesc="Tensors and Dynamic neural networks in Python with strong GPU accelerat
 arch=('x86_64')
 url="https://pytorch.org/"
 license=('BSD')
-makedepends=('git' 'ninja' 'cuda' 'cudnn' 'nccl' 'cmake' 'python-numpy' 'python-setuptools' 'python-yaml')
+makedepends=('git' 'ninja' 'ccache' 'cuda' 'cudnn' 'nccl' 'cmake' 'python-numpy' 'python-setuptools' 'python-yaml')
 source=("${pkgbase}::git+https://github.com/pytorch/pytorch.git")
 md5sums=('SKIP')
 
@@ -88,8 +88,19 @@ __EOF__
 build() {
   cd "$pkgbase"
 
-  export CC=/opt/cuda/bin/gcc
-  export CXX=/opt/cuda/bin/g++
+  export CCACHE_DIR=/tmp/ccache
+  export CCACHE_SLOPPINESS=file_macro,locale,time_macros,system_headers,file_stat_matches_ctime,include_file_ctime,include_file_mtime
+  nvcc_cc=$(basename `readlink -f /opt/cuda/bin/gcc`)
+  nvcc_cxx=$(basename `readlink -f /opt/cuda/bin/g++`)
+  cp /usr/lib/ccache/bin -r .
+  ln -sf /usr/bin/ccache bin/nvcc
+  ln -sf `which ${nvcc_cc}` bin/${nvcc_cc}
+  ln -sf `which ${nvcc_cxx}` bin/${nvcc_cxx}
+  export PATH="${srcdir}/${pkgbase}/bin:$PATH"
+  export CC="${srcdir}/${pkgbase}/bin/${nvcc_cc}"
+  export CXX="${srcdir}/${pkgbase}/bin/${nvcc_cxx}"
+  export CUDA_NVCC_EXECUTABLE="${srcdir}/${pkgbase}/bin/nvcc"
+
   export CFLAGS="-march=skylake -mtune=generic -O2 -pipe -fstack-protector-strong"
   export CXXFLAGS="-march=skylake -mtune=generic -O2 -pipe -fstack-protector-strong"
   export CUDA_BIN_PATH=/opt/cuda
