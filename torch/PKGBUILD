@@ -140,3 +140,5 @@ package() {
   rm -rf "$pkgdir/usr/bin"
   rm -rf "$pkgdir$(python_site_path `which python`)/caffe"
 }
+
+# vim: set ts=2 sw=2:

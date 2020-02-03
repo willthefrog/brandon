@@ -1,0 +1,36 @@
+# -*- mode: sh-mode; tab-width: 2; -*-
+# Maintainer: Yang Zhang <yangzhang@live.com>
+# Upstream URL: https://github.com/pytorch/vision
+
+pkgbase=torchvision
+pkgname=python-torchvision-cuda-git
+pkgver=0.2.1.r29.gfe973ce
+pkgrel=1
+pkgdesc="Datasets, Transforms and Models specific to Computer Vision"
+arch=('x86_64')
+url="https://github.com/pytorch/vision"
+license=('BSD')
+provides=('python-torchvision')
+conflicts=('python-torchvision')
+replaces=('python-torchvision')
+depends=('python-torch' 'python-six' 'python-pillow')
+makedepends=('git' 'cmake' 'cuda' 'python-setuptools')
+source=("${pkgbase}::git+$url.git")
+md5sums=('SKIP')
+
+pkgver() {
+  cd "$pkgbase"
+  echo "$(git log -1 --format="%cd" --date=short | sed 's|-||g').r$(git rev-list --count HEAD)".$(git describe --always | sed 's/.*-//g')
+}
+
+package() {
+  cd "$pkgbase"
+
+  CC=/opt/cuda/bin/gcc \
+  CXX=/opt/cuda/bin/g++ \
+  NVCC_FLAGS="-gencode arch=compute_50,code=sm_50 -gencode arch=compute_61,code=sm_61 -gencode arch=compute_70,code=sm_70 -gencode arch=compute_50,code=compute_50" \
+  python setup.py install --root="$pkgdir/" --optimize=1
+  install -m644 -D LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}
+
+# vim: set ts=2 sw=2:

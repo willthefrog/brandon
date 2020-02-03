@@ -1,12 +1,9 @@
-name: torch
+name: torchvision
 on:
   push:
     paths:
-      - torch/*
-      - .github/workflows/torch.yml
-  repository_dispatch:
-  schedule:
-    - cron:   '0 0 * * 1'
+      - torchvision/*
+      - .github/workflows/torchvision.yml
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -29,18 +26,11 @@ jobs:
     - name: Build Package
       run: |
         chmod 777 -R .
-        sudo -u arch makepkg -rsfi --noconfirm
-      working-directory: ${{ github.workflow }}
-    - name: Upload Package
-      run: |
-        gsutil cp *.zst ${GCS_BUCKET}
-      working-directory: ${{ github.workflow }}
-    - name: Build torchvision
-      run: |
-        chmod 777 -R .
+        gsutil cp ${GCS_BUCKET}/pacman.conf /etc/pacman.conf
+        pacman -Sy
         sudo -u arch makepkg -rsf --noconfirm
-      working-directory: torchvision
+      working-directory: ${{ github.workflow }}
     - name: Upload Package
       run: |
         gsutil cp *.zst ${GCS_BUCKET}
-      working-directory: torchvision
+      working-directory: ${{ github.workflow }}
