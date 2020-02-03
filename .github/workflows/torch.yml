@@ -26,15 +26,6 @@ jobs:
         gcloud auth activate-service-account ${GCP_SA_EMAIL} --key-file=/tmp/sa_key.json
     - name: Update pacman index
       run: pacman -Sy
-    - name: Setup ccache dir
-      run: mkdir -p /tmp/ccache
-    - name: Persist ccache Directory
-      uses: actions/cache@v1
-      env:
-        cache-name: ccache
-      with:
-        path: /tmp/ccache
-        key: ccache
     - name: Build Package
       run: |
         chmod 777 -R .
