@@ -45,9 +45,9 @@ build() {
     cudnn_header='/usr/include/cudnn.h'
   fi
   if [ -e '/opt/cuda/include/nccl.h' ]; then
-    nccl_path='/opt/cuda'
+    nccl_header='/opt/cuda/include/nccl.h'
   else
-    nccl_path='/usr'
+    nccl_header='/usr/include/nccl.h'
   fi
 
   TF_CUDA_COMPUTE_CAPABILITIES=6.1,7.0                                                             \
@@ -74,10 +74,7 @@ build() {
   TF_SET_ANDROID_WORKSPACE=0                                                                       \
   TF_CUDA_CLANG=0                                                                                  \
   TF_DOWNLOAD_CLANG=0                                                                              \
-  TF_NCCL_VERSION=''                                                                               \
-  NCCL_INSTALL_PATH=${nccl_path}                                                                   \
-  GCC_HOST_COMPILER_PATH=/opt/cuda/bin/gcc                                                         \
-  HOST_CXX_COMPILER_PATH=/opt/cuda/bin/g++                                                         \
+  TF_NCCL_VERSION=$(sed -n 's/^#define NCCL_MAJOR\s*\(.*\).*/\1/p' ${nccl_header})                 \
   TF_CUDA_PATHS=/opt/cuda,/usr/lib,/usr                                                            \
   TF_CUDA_VERSION=$(/opt/cuda/bin/nvcc --version | sed -n 's/^.*release \(.*\),.*/\1/p')           \
   TF_CUDNN_VERSION=$(sed -n 's/^#define CUDNN_MAJOR\s*\(.*\).*/\1/p' ${cudnn_header})              \
