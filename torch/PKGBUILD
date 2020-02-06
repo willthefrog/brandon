@@ -85,7 +85,8 @@ __EOF__
 build() {
   cd "$pkgbase"
 
-  export CUDA_HOST_COMPILER=/opt/cuda/bin/gcc
+  export CC=/opt/cuda/bin/gcc
+  export CXX=/opt/cuda/bin/g++
   export CFLAGS="-march=skylake -mtune=generic -O2 -pipe -fstack-protector-strong"
   export CXXFLAGS="-march=skylake -mtune=generic -O2 -pipe -fstack-protector-strong"
   export CUDA_BIN_PATH=/opt/cuda
