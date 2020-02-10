@@ -69,6 +69,10 @@ build() {
   bazel-bin/tensorflow/tools/pip_package/build_pip_package "${srcdir}"/tmpoptcuda
 }
 
+get_pyver () {
+  python -c 'import sys; print(str(sys.version_info[0]) + "." + str(sys.version_info[1]))'
+}
+
 package() {
   WHEEL_PACKAGE=$(find "${srcdir}"/tmpoptcuda -name "tensor*.whl")
   pip install --ignore-installed --upgrade --root "${pkgdir}"/ $WHEEL_PACKAGE --no-dependencies
