@@ -68,7 +68,7 @@ build() {
   TF_CUDA_COMPUTE_CAPABILITIES=6.1,7.0                                                             \
   TF_CUDA_PATHS=/opt/cuda,/usr/lib,/usr                                                            \
   TF_NCCL_VERSION=$(sed -n 's/^#define NCCL_MAJOR\s*\(.*\).*/\1/p' ${nccl_header})                 \
-  python build/build.py --enable_cuda --cuda_path=/opt/cuda --cudnn_path=${cudnn_path} --bazel_startup_options='--max_idle_secs=300'
+  python build/build.py --bazel_path=`which bazel` --enable_cuda --cuda_path=/opt/cuda --cudnn_path=${cudnn_path} --bazel_startup_options='--max_idle_secs=300'
 }
 
 package_python-jax-git() {
