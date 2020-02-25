@@ -10,9 +10,8 @@ url='https://github.com/google/jax'
 license=('Apache')
 makedepends=(git gcc bazel cuda cudnn nccl python-setuptools python-scipy cython)
 depends=(absl-py python-numpy)
-source=("${pkgbase}::git+${url}.git"
-        "grpc.patch::https://raw.githubusercontent.com/clearlinux-pkgs/tensorflow/master/Add-grpc-fix-for-gettid.patch")
-md5sums=('SKIP' 'SKIP')
+source=("${pkgbase}::git+${url}.git")
+md5sums=('SKIP')
 
 pkgver() {
   cd "${pkgbase}"
@@ -21,23 +20,9 @@ pkgver() {
 
 prepare() {
   cd "${pkgbase}"
-  mkdir -p external
-  cp ../grpc.patch external/
-
   patch -p1  << __EOF__
 --- a/WORKSPACE
 +++ b/WORKSPACE
-@@ -33,6 +33,9 @@ http_archive(
-     urls = [
-         "https://github.com/tensorflow/tensorflow/archive/210649dd56d7c4b75e3e8e2a851b61c80ae13dbb.tar.gz",
-     ],
-+    patch_tool="patch",
-+    patches=["grpc.patch"],
-+    patch_args=["-p1"],
- )
-
- # For development, one can use a local TF repository instead.
-
 --- a/build/build.py
 +++ b/build/build.py
 @@ -341,7 +341,6 @@ def main():
@@ -47,7 +32,6 @@ prepare() {
 -  shell([bazel_path, "shutdown"])
 __EOF__
 }
-
 
 build() {
   cd "${pkgbase}"
