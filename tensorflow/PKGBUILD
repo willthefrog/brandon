@@ -18,9 +18,8 @@ optdepends=('tensorboard: Tensorflow visualization toolkit'
 conflicts=(python-tensorflow)
 provides=(python-tensorflow)
 replaces=(python-tensorflow)
-source=('git+https://github.com/tensorflow/tensorflow'
-        "grpc.patch::https://raw.githubusercontent.com/clearlinux-pkgs/tensorflow/master/Add-grpc-fix-for-gettid.patch")
-md5sums=('SKIP' 'SKIP')
+source=('git+https://github.com/tensorflow/tensorflow')
+md5sums=('SKIP')
 
 pkgver() {
   cd "$pkgbase"
@@ -29,10 +28,6 @@ pkgver() {
 
 prepare() {
   cd "$pkgbase"
-  # fix grpc build issue
-  # https://github.com/clearlinux/distribution/issues/1151
-  rm -f third_party/Rename-gettid-functions.patch
-  patch -p1 -i ../grpc.patch
   echo "2.0.0-" > .bazelversion
 }
 
