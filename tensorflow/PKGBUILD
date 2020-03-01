@@ -58,8 +58,14 @@ build() {
   CC_OPT_FLAGS="-march=skylake -Wl,--as-needed -ffunction-sections"                                \
   ./configure
 
+  CACHE_FLAGS=""
+  if [ -n "${BAZEL_CACHE_BUCKET}" -a -n "${BAZEL_CACHE_AUTH}" ]; then
+    msg2 "==== using remote cache on GCS ===="
+    CACHE_FLAGS="--remote_http_cache=https://storage.googleapis.com/${BAZEL_CACHE_BUCKET} --google_credentials=${BAZEL_CACHE_AUTH}"
+  fi
+
   bazel build --config=v2 --config=opt --config=nohdfs --config=noaws --config=short_logs \
-    --incompatible_no_support_tools_in_action_inputs=false \
+    $CACHE_FLAGS --incompatible_no_support_tools_in_action_inputs=false \
     //tensorflow/tools/pip_package:build_pip_package
   bazel-bin/tensorflow/tools/pip_package/build_pip_package "${srcdir}"/tmpoptcuda
 }

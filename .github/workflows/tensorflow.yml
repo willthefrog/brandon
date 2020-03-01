@@ -27,9 +27,13 @@ jobs:
     - name: Update pacman index
       run: pacman -Sy
     - name: Build Package
+      env:
+        BAZEL_CACHE_BUCKET: ${{ secrets.BAZEL_CACHE_BUCKET }}
+        BAZEL_CACHE_AUTH: /tmp/sa_key.json
       run: |
         chmod 777 -R .
-        sudo -u arch makepkg -rsf --noconfirm
+        chmod 777 -R /github/home/
+        sudo -E -u arch makepkg -rsf --noconfirm
       working-directory: ${{ github.workflow }}
     - name: Upload Package
       run: |
