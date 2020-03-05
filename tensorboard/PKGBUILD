@@ -1,0 +1,56 @@
+# Maintainer: Yang Zhang <yangzhang@live.com>
+
+pkgbase=tensorboard
+pkgname=python-tensorboard-git
+pkgver=0.1.3.r642.g08a157f4
+pkgrel=1
+pkgdesc="TensorFlow's Visualization Toolkit."
+arch=('x86_64')
+url="https://github.com/tensorflow/tensorboard"
+license=('APACHE')
+makedepends=('git' 'bazel' 'python-setuptools' 'tree')
+depends=('python' 'python-werkzeug' 'python-numpy' 'python-bleach' 'python-wheel' 'python-markdown' 'python-tensorflow-serving-api'
+         'python-html5lib' 'python-protobuf' 'python-setuptools' 'python-tensorflow' 'python-grpcio' 'python-google-auth-oauthlib')
+source=("${pkgbase}::git+${url}.git")
+md5sums=('SKIP')
+
+pkgver() {
+  cd "$pkgbase"
+  echo "$(git log -1 --format="%cd" --date=short | sed 's|-||g').r$(git rev-list --count HEAD)".$(git describe --always | sed 's/.*-//g')
+}
+
+build() {
+  cd "$pkgbase"
+
+  bazel build tensorboard:tensorboard
+  bazel build //tensorboard/pip_package:build_pip_package
+
+  rm -rf pypackage
+  mkdir pypackage
+  cp -R bazel-bin/tensorboard/pip_package/build_pip_package.runfiles/org_tensorflow_tensorboard/external pypackage
+  cp -R bazel-bin/tensorboard/pip_package/build_pip_package.runfiles/org_tensorflow_tensorboard/tensorboard pypackage
+  cp tensorboard/pip_package/{README.rst,MANIFEST.in} pypackage
+  cp README.md pypackage
+  cp tensorboard/pip_package/setup.py pypackage
+  cp tensorboard/pip_package/requirements.txt pypackage
+  cd pypackage
+  python setup.py build
+}
+
+package() {
+  cd "$pkgbase"
+
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+
+  cd pypackage
+  python setup.py install --root="$pkgdir" --optimize=1
+
+  rm -r "$pkgdir"/usr/lib/python3.8/site-packages/external/
+
+  _requires="$pkgdir"/usr/lib/python3.8/site-packages/tensorboard-*.egg-info/requires.txt
+  sed -i '/^futures/d' ${_requires}
+  # make it `tensorboard-plugin-wit` optional dep
+  sed -i '/^tensorboard-plugin-wit/d' ${_requires}
+}
+
+# vim:set ts=2 sw=2 et:
