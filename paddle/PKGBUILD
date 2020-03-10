@@ -11,7 +11,7 @@ url='https://github.com/PaddlePaddle/Paddle'
 license=(apache)
 depends=('grep' 'cuda' 'cudnn' 'nccl' 'grpc' 'hdf5' 'python-numpy' 'python-protobuf'
         'python-requests' 'python-decorator' 'python-pyaml' 'python-py-cpuinfo'
-        'python-prettytable' 'python-objgraph')
+        'python-prettytable' 'python-objgraph' 'python-astor' 'python-gast')
 makedepends=('git' 'cmake' 'patchelf' 'wget' 'python-pip' 'python-wheel')
 optdepends=('python-pillow: for voc2012 dataset'
             'python-nltk: for sentiment dataset'
