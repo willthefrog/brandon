@@ -34,7 +34,7 @@ prepare() {
  # More details can be found in the following links.
  # https://github.com/pytorch/pytorch/issues/20635
  # https://github.com/pytorch/pytorch/issues/17108
--if (NOT MSVC)
+-if(NOT MSVC)
 -  set(CUDA_USE_STATIC_CUDA_RUNTIME OFF CACHE INTERNAL "")
 -endif()
 
