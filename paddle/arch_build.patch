@@ -1,3 +1,38 @@
+diff --git a/paddle/fluid/inference/tensorrt/engine.cc b/paddle/fluid/inference/tensorrt/engine.cc
+index 011d9a25fa..b6c23d0d7b 100644
+--- a/paddle/fluid/inference/tensorrt/engine.cc
++++ b/paddle/fluid/inference/tensorrt/engine.cc
+@@ -39,7 +39,7 @@ void TensorRTEngine::InitNetwork() {
+             nvinfer1::NetworkDefinitionCreationFlag::kEXPLICIT_BATCH)));
+     infer_builder_config_.reset(infer_builder_->createBuilderConfig());
+     infer_ptr<nvinfer1::IBuilderConfig> infer_builder_config_;
+-    optim_profile_.reset(infer_builder_->createOptimizationProfile());
++    optim_profile_ = infer_builder_->createOptimizationProfile();
+ #endif
+   } else {
+     infer_network_.reset(infer_builder_->createNetwork());
+@@ -160,7 +160,7 @@ void TensorRTEngine::FreezeNetwork() {
+           input.first.c_str(), nvinfer1::OptProfileSelector::kOPT,
+           Vec2TRT_Dims(optim_input_shape_[input.first], input.first, true));
+     }
+-    infer_builder_config_->addOptimizationProfile(optim_profile_.get());
++    infer_builder_config_->addOptimizationProfile(optim_profile_);
+     if (WithFp16()) {
+       infer_builder_config_->setFlag(nvinfer1::BuilderFlag::kFP16);
+       if (disable_trt_plugin_fp16()) {
+diff --git a/paddle/fluid/inference/tensorrt/engine.h b/paddle/fluid/inference/tensorrt/engine.h
+index 03fd7a283b..0a4f1c94f9 100644
+--- a/paddle/fluid/inference/tensorrt/engine.h
++++ b/paddle/fluid/inference/tensorrt/engine.h
+@@ -340,7 +340,7 @@ class TensorRTEngine {
+   infer_ptr<nvinfer1::INetworkDefinition> infer_networkv2_;
+ #if IS_TRT_VERSION_GE(6000)
+   infer_ptr<nvinfer1::IBuilderConfig> infer_builder_config_;
+-  std::unique_ptr<nvinfer1::IOptimizationProfile> optim_profile_;
++  nvinfer1::IOptimizationProfile* optim_profile_;
+   std::vector<std::unique_ptr<plugin::DynamicPluginTensorRT>> owned_pluginv2_;
+ #endif
+   std::mutex mutex_;
 diff --git a/CMakeLists.txt b/CMakeLists.txt
 index 5846dc22c3..0e0bc400bb 100755
 --- a/CMakeLists.txt
@@ -175,27 +210,6 @@ index 969ad3c922..0f6b9b4058 100644
  __all__ = ['train', 'test', 'valid']
  
  DATA_URL = 'http://paddlemodels.bj.bcebos.com/flowers/102flowers.tgz'
-diff --git a/python/paddle/dataset/mq2007.py b/python/paddle/dataset/mq2007.py
-index d5740f30c8..e02e8006ec 100644
---- a/python/paddle/dataset/mq2007.py
-+++ b/python/paddle/dataset/mq2007.py
-@@ -27,10 +27,15 @@ from __future__ import print_function
- 
- import os
- import functools
--import rarfile
- from .common import download
- import numpy as np
- 
-+try:
-+    import rarfile
-+except ImportError:
-+    import sys
-+    sys.stderr.write("rarfile not installed, dataset.mq2007 is unavailable\n")
-+
- # URL = "http://research.microsoft.com/en-us/um/beijing/projects/letor/LETOR4.0/Data/MQ2007.rar"
- URL = "http://www.bigdatalab.ac.cn/benchmark/upload/download_source/7b6dbbe2-842c-11e4-a536-bcaec51b9163_MQ2007.rar"
- MD5 = "7be1640ae95c6408dab0ae7207bdc706"
 diff --git a/python/paddle/dataset/sentiment.py b/python/paddle/dataset/sentiment.py
 index 721cb5a819..c16ddaab82 100644
 --- a/python/paddle/dataset/sentiment.py
