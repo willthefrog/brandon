@@ -47,10 +47,10 @@ __EOF__
   patch -p1  << __EOF__
 --- a/torch/_utils_internal.py
 +++ b/torch/_utils_internal.py
-@@ -54,4 +54,4 @@ def get_source_lines_and_file(obj):
-
- TEST_MASTER_ADDR = '127.0.0.1'
- TEST_MASTER_PORT = 29500
+@@ -62,4 +62,4 @@ TEST_MASTER_PORT = 29500
+ USE_GLOBAL_DEPS = True
+ # USE_RTLD_GLOBAL_WITH_LIBTORCH controls whether __init__.py tries to load
+ # _C.so with RTLD_GLOBAL during the call to dlopen.
 -USE_RTLD_GLOBAL_WITH_LIBTORCH = False
 +USE_RTLD_GLOBAL_WITH_LIBTORCH = True
 __EOF__
