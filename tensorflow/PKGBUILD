@@ -26,25 +26,6 @@ pkgver() {
   echo "$(git log -1 --format="%cd" --date=short | sed 's|-||g').r$(git rev-list --count HEAD)".$(git describe --always | sed 's/.*-//g')
 }
 
-prepare() {
-  cd "$pkgbase"
-  echo "3.1.0-" > .bazelversion
-  patch -p1 << __EOF__
---- a/configure.py
-+++ b/configure.py
-@@ -1364,8 +1364,7 @@ def main():
-   # environment variables.
-   environ_cp = dict(os.environ)
-
--  current_bazel_version = check_bazel_version(_TF_MIN_BAZEL_VERSION,
--                                              _TF_MAX_BAZEL_VERSION)
-+  current_bazel_version = "2.2.0-"
-   _TF_CURRENT_BAZEL_VERSION = convert_version_to_int(current_bazel_version)
-
-   reset_tf_configure_bazelrc()
-__EOF__
-}
-
 build() {
   cd "$pkgbase"
 
