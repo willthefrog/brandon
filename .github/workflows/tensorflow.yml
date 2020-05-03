@@ -6,7 +6,7 @@ on:
       - .github/workflows/tensorflow.yml
   repository_dispatch:
   schedule:
-    - cron:   '0 0 * * 1'
+    - cron: '0 18 * * 6'
 env:
   GCP_SA_EMAIL: ${{ secrets.GCP_SA_EMAIL }}
   GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
