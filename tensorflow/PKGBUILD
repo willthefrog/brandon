@@ -26,6 +26,11 @@ pkgver() {
   echo "$(git log -1 --format="%cd" --date=short | sed 's|-||g').r$(git rev-list --count HEAD)".$(git describe --always | sed 's/.*-//g')
 }
 
+prepare() {
+  cd "$pkgbase"
+  echo "3.1.0-" > .bazelversion
+}
+
 build() {
   cd "$pkgbase"
 
