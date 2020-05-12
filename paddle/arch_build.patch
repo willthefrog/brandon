@@ -325,3 +325,26 @@ index 29e16b3757..fa1d652e5c 100644
 
  # in cuda9, suppress cuda warning on eigen
  set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -w")
+diff --git a/python/paddle/incubate/hapi/datasets/flowers.py b/python/paddle/incubate/hapi/datasets/flowers.py
+index 6f56cc82c1..0778d7c488 100644
+--- a/python/paddle/incubate/hapi/datasets/flowers.py
++++ b/python/paddle/incubate/hapi/datasets/flowers.py
+@@ -18,12 +18,17 @@ import os
+ import io
+ import tarfile
+ import numpy as np
+-import scipy.io as scio
+ from PIL import Image
+
+ from paddle.io import Dataset
+ from .utils import _check_exists_and_download
+
++try:
++    import scipy.io as scio
++except ImportError:
++    import sys
++    sys.stderr.write("scipy not installed, flowers dataset is unavailable")
++
+ __all__ = ["Flowers"]
+
+ DATA_URL = 'http://paddlemodels.bj.bcebos.com/flowers/102flowers.tgz'
