@@ -14,7 +14,7 @@ provides=('python-torchvision')
 conflicts=('python-torchvision')
 replaces=('python-torchvision')
 depends=('python-torch' 'python-six' 'python-pillow')
-makedepends=('git' 'cmake' 'cuda' 'python-setuptools')
+makedepends=('git' 'cmake' 'ninja' 'cuda' 'python-setuptools')
 source=("${pkgbase}::git+$url.git")
 md5sums=('SKIP')
 
@@ -47,13 +47,19 @@ prepare() {
 __EOF__
 }
 
-package() {
+build() {
   cd "$pkgbase"
-
+  MAX_JOBS=`nproc` \
   CC=/opt/cuda/bin/gcc \
   CXX=/opt/cuda/bin/g++ \
-  NVCC_FLAGS="-gencode arch=compute_50,code=sm_50 -gencode arch=compute_61,code=sm_61 -gencode arch=compute_70,code=sm_70 -gencode arch=compute_50,code=compute_50" \
-  python setup.py install --root="$pkgdir/" --optimize=1
+  FORCE_CUDA=1 \
+  TORCH_CUDA_ARCH_LIST="5.0+PTX;6.1;7.0" \
+  python setup.py build
+}
+
+package() {
+  cd "$pkgbase"
+  python setup.py install --skip-build --prefix=/usr --root="$pkgdir" --optimize=1
   install -m644 -D LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
 }
 
