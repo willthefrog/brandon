@@ -2,8 +2,7 @@
 # Maintainer: Yang Zhang <yangzhang@live.com>
 # Upstream URL: http://gcc.gnu.org
 
-_gccmajor="10.1.0"
-_gccver="10.1.0"
+_gccver=`pacman -Qi gcc | grep -oP "Version.*: \K([\d.]+)(?=-.)"`
 _gccsrc="gcc-${_gccver}"
 
 pkgname='libgccjit'
@@ -12,7 +11,7 @@ pkgrel=1
 pkgdesc='Just-In-Time Compilation using GCC.'
 url='https://gcc.gnu.org/wiki/JIT'
 license=(GPL3)
-source=("ftp://gcc.gnu.org/pub/gcc/releases/gcc-$_gccmajor/$_gccsrc.tar.xz")
+source=("ftp://gcc.gnu.org/pub/gcc/releases/$_gccsrc/$_gccsrc.tar.xz")
 sha512sums=('0cb2a74c793face751f42bc580960b00e2bfea785872a0a2155f1f1dbfaa248f9591b67f4322db0f096f8844aca9243bc02732bda106c3b6e43b02bb67eb3096')
 arch=('i686' 'x86_64')
 depends=('glibc' 'libmpc' 'zlib')
