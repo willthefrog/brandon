@@ -104,7 +104,7 @@ build() {
         -DUSE_ROCM=OFF                           \
         -DUSE_MPI=OFF                            \
         -DUSE_MKLDNN=OFF                         \
-        -DUSE_GLOO=OFF                           \
+        -DUSE_GLOO=ON                            \
         -DUSE_SYSTEM_NCCL=ON
   cmake --build build -j"$(nproc)"
   touch build/build.ninja
