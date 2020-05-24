@@ -3,6 +3,7 @@ on:
   push:
     paths:
       - torch/*
+      - torchvision/*
       - .github/workflows/torch.yml
   repository_dispatch:
   schedule:
@@ -26,12 +27,12 @@ jobs:
         gcloud auth activate-service-account ${GCP_SA_EMAIL} --key-file=/tmp/sa_key.json
     - name: Update pacman index
       run: pacman -Sy
-    - name: Build Package
+    - name: Build torch
       run: |
         chmod 777 -R .
         sudo -u arch makepkg -rsfi --noconfirm
       working-directory: ${{ github.workflow }}
-    - name: Upload Package
+    - name: Upload torch
       run: |
         gsutil cp *.zst ${GCS_BUCKET}
       working-directory: ${{ github.workflow }}
@@ -40,7 +41,7 @@ jobs:
         chmod 777 -R .
         sudo -u arch makepkg -rsf --noconfirm
       working-directory: torchvision
-    - name: Upload Package
+    - name: Upload torchvision
       run: |
         gsutil cp *.zst ${GCS_BUCKET}
       working-directory: torchvision
