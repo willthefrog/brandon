@@ -69,6 +69,20 @@ __EOF__
      if (NOT NCCL_VERSION_MATCHED)
 __EOF__
 
+  # patch gloo to remove cudart dependency
+  cd third_party/gloo
+  patch -p1  << __EOF__
+--- a/cmake/Cuda.cmake
++++ b/cmake/Cuda.cmake
+@@ -151,7 +151,6 @@ else()
+ endif()
+
+ include_directories(SYSTEM \${CUDA_INCLUDE_DIRS})
+-list(APPEND gloo_DEPENDENCY_LIBS \${CUDA_CUDART_LIBRARY})
+
+ # Find libcuda.so and lbnvrtc.so
+ # For libcuda.so, we will find it under lib, lib64, and then the
+__EOF__
 }
 
 build() {
