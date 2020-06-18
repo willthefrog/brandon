@@ -8,39 +8,49 @@ on:
   repository_dispatch:
   schedule:
     - cron: '0 0 1 * *'
+
 jobs:
   build:
     runs-on: ubuntu-latest
+
     env:
       GCP_SA_EMAIL: ${{ secrets.GCP_SA_EMAIL }}
       GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
       GCS_BUCKET: ${{ secrets.GCS_BUCKET }}
+
     container:
       image: 'willthefrog/makepkg'
       options: --user root
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@master
+
     - name: Setup gcloud
       run: |
         echo ${GCP_SA_KEY} | base64 -d > /tmp/sa_key.json
         gcloud auth activate-service-account ${GCP_SA_EMAIL} --key-file=/tmp/sa_key.json
+
     - name: Update gcc
       run: pacman -Sy --noconfirm gcc
+
     - name: Build and install libgccjit
       run: |
         chmod 777 -R .
         sudo -u arch makepkg -risf --noconfirm
       working-directory: libgccjit
+
     - name: Upload libgccjit
       run: |
         gsutil cp *.zst ${GCS_BUCKET}
       working-directory: libgccjit
+
     - name: Build emacs
       run: |
         chmod 777 -R .
         sudo -u arch makepkg -rsf --noconfirm
       working-directory: emacs
+
     - name: Upload emacs
       run: |
         gsutil cp *.zst ${GCS_BUCKET}
