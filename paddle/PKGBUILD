@@ -18,7 +18,7 @@ optdepends=('python-pillow: for voc2012 dataset'
             'python-rarfile: for mq2007 dataset'
             'python-scipy: for flower dataset and slim')
 source=("${pkgbase}::git+${url}.git" 'arch_build.patch')
-sha512sums=('SKIP' '1753277f4592b6f58aab916e20e76b8a7ac91d0dc8315ff846cffb7c8b083d51cfa2ebf176846c5379f9f3132f638bc35d25767c413c60177d9a9b19be277c60')
+sha512sums=('SKIP' '060680ea907b4cbf8b519db44f7de5b82a52448d971ea72302deecb75474c50802130f766934790c272425f88fc11e50ede58124154e5d219113a5737935bf73')
 options=('!strip')
 
 pkgver() {
