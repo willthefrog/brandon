@@ -43,3 +43,9 @@ jobs:
       run: |
         gsutil cp *.zst ${GCS_BUCKET}
       working-directory: ${{ github.workflow }}
+
+    - name: Handle compilation database
+      run: |
+        compdb -p build/ list > paddle_compile_commands.json
+        gsutil cp paddle_compile_commands.json ${GCS_BUCKET}
+      working-directory: ${{ github.workflow }}/src/paddle

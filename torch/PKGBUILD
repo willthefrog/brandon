@@ -102,7 +102,8 @@ build() {
   PYTHON3_LIB=`python -c "import sysconfig; print('/'.join(sysconfig.get_config_vars('LIBDIR', 'INSTSONAME')))"`
   INSTALL_DIR="$srcdir/$pkgbase/torch"
 
-  cmake -GNinja -B build -S .                   \
+  cmake -GNinja -B build -S .                    \
+        -DCMAKE_EXPORT_COMPILE_COMMANDS=ON       \
         -DTORCH_CUDA_ARCH_LIST="5.0+PTX;6.1;7.0" \
         -DCMAKE_INSTALL_PREFIX=$INSTALL_DIR      \
         -DATEN_NO_TEST=ON                        \

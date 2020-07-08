@@ -45,6 +45,12 @@ jobs:
         gsutil cp *.zst ${GCS_BUCKET}
       working-directory: ${{ github.workflow }}
 
+    - name: Handle compilation database
+      run: |
+        compdb -p build/ list > torch_compile_commands.json
+        gsutil cp torch_compile_commands.json ${GCS_BUCKET}
+      working-directory: ${{ github.workflow }}/src/torch
+
     - name: Build torchvision
       run: |
         chmod 777 -R .
