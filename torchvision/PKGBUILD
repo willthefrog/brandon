@@ -23,6 +23,26 @@ pkgver() {
   echo "$(git log -1 --format="%cd" --date=short | sed 's|-||g').r$(git rev-list --count HEAD)".$(git describe --always | sed 's/.*-//g')
 }
 
+prepare() {
+  cd "$pkgbase"
+  git submodule update --init --recursive
+
+  patch -p1  << __EOF__
+--- a/setup.py
++++ b/setup.py
+@@ -299,8 +299,7 @@ def get_extensions():
+                     png_bin_folder = os.path.dirname(libpng)
+                     libpng_on_conda = (
+                         running_under_conda and bin_folder == png_bin_folder)
+-                    release_info = get_linux_distribution()
+-                    not_debian = release_info["NAME"] not in {'Ubuntu', 'Debian'}
++                    not_debian = True
+                 if not linux or libpng_on_conda or not_debian:
+                     png_lib = subprocess.run([libpng, '--libdir'],
+                                              stdout=subprocess.PIPE)
+__EOF__
+}
+
 build() {
   cd "$pkgbase"
   MAX_JOBS=`nproc` \
