@@ -44,6 +44,9 @@ source=("emacs-git::git://git.savannah.gnu.org/emacs.git#branch=feature/native-c
 options=(!strip)
 md5sums=('SKIP')
 
+CFLAGS+=" -O3 -march=skylake -fomit-frame-pointer"
+CXXFLAGS+=" -O3 -march=skylake -fomit-frame-pointer"
+
 if [[ $LTO == "YES" ]] && [[ $CLANG != "YES" ]]; then
   CFLAGS+=" -g -flto -fuse-linker-plugin"
   CXXFLAGS+=" -g -flto -fuse-linker-plugin"
