@@ -20,7 +20,7 @@ LUCID=            # Use the lucid, a.k.a athena, toolkit. Like XEmacs, sorta.
                   #
 GTK2=             # GTK2 support. Why would you?
 NOCAIRO=          # Disable here.
-XWIDGETS="YES"    # Use GTK+ widgets pulled from webkit2gtk. Usable.
+XWIDGETS=         # Use GTK+ widgets pulled from webkit2gtk. Usable.
 DOCS_HTML=        # Generate and install html documentation.
 DOCS_PDF=         # Generate and install pdf documentation.
 MAGICK=           # ImageMagick 7 support. Deprecated (read the logs).
