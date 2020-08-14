@@ -12,7 +12,8 @@ url="https://pytorch.org/"
 license=('BSD')
 provides=('python-torch')
 conflicts=('python-torch')
-depends=('python-future' 'python-numpy' 'python-cffi' 'python-yaml' 'cuda' 'cudnn' 'nccl')
+depends=('python-future' 'python-numpy' 'python-cffi' 'python-yaml' 'python-typing_extensions'
+         'cuda' 'cudnn' 'nccl')
 makedepends=('git' 'ninja' 'cmake' 'python-setuptools')
 optdepends=('python-tqdm: model zoo progress bar')
 source=("${pkgbase}::git+https://github.com/pytorch/pytorch.git")
