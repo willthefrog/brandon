@@ -7,7 +7,7 @@ on:
       - .github/workflows/emacs.yml
   repository_dispatch:
   schedule:
-    - cron: '0 0 1 * *'
+    - cron: '0 4 2 * *'
 
 jobs:
   build:
