@@ -28,7 +28,8 @@ pkgver() {
 
 prepare() {
   cd "${pkgbase}"
-  echo "3.2.0-" > .bazelversion
+  _bazelver=`pacman -Qi bazel | grep -oP "Version.*: \K([\d.]+)(?=-.)"`
+  echo "${_bazelver}-" > .bazelversion
 }
 
 build() {
