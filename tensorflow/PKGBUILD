@@ -22,17 +22,17 @@ source=('git+https://github.com/tensorflow/tensorflow')
 md5sums=('SKIP')
 
 pkgver() {
-  cd "$pkgbase"
+  cd "${pkgbase}"
   echo "$(git log -1 --format="%cd" --date=short | sed 's|-||g').r$(git rev-list --count HEAD)".$(git describe --always | sed 's/.*-//g')
 }
 
 prepare() {
-  cd "$pkgbase"
+  cd "${pkgbase}"
   echo "3.2.0-" > .bazelversion
 }
 
 build() {
-  cd "$pkgbase"
+  cd "${pkgbase}"
 
   GCC_HOST_COMPILER_PATH=/opt/cuda/bin/gcc                                                         \
   HOST_CXX_COMPILER_PATH=/opt/cuda/bin/g++                                                         \
