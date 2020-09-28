@@ -65,19 +65,65 @@ index 536e95c1dc..8c5a434048 100644
  include (ExternalProject)
  
  SET(GRPC_SOURCES_DIR ${THIRD_PARTY_PATH}/grpc)
-diff --git a/cmake/external/openblas.cmake b/cmake/external/openblas.cmake
-index eff73c792a..b18c17c090 100644
---- a/cmake/external/openblas.cmake
-+++ b/cmake/external/openblas.cmake
-@@ -43,7 +43,7 @@ IF(NOT WIN32)
-         INSTALL_DIR         ${CBLAS_INSTALL_DIR}
-         BUILD_IN_SOURCE     1
-         BUILD_COMMAND       make -j$(nproc) ${COMMON_ARGS} ${OPTIONAL_ARGS}
--        INSTALL_COMMAND     make install NO_SHARED=1 NO_LAPACK=1 PREFIX=<INSTALL_DIR> 
-+        INSTALL_COMMAND     make install NO_SHARED=1 NO_LAPACK=1 PREFIX=<INSTALL_DIR>
-         UPDATE_COMMAND      ""
-         CONFIGURE_COMMAND   ""
-     )
+diff --git a/paddle/fluid/operators/distributed/grpc/grpc_client.h b/paddle/fluid/operators/distributed/grpc/grpc_client.h
+index 22ca74a67e..fbf2a3c407 100644
+--- a/paddle/fluid/operators/distributed/grpc/grpc_client.h
++++ b/paddle/fluid/operators/distributed/grpc/grpc_client.h
+@@ -46,9 +46,6 @@ limitations under the License. */
+ #include "paddle/fluid/operators/distributed/sendrecvop_utils.h"
+ #include "paddle/fluid/platform/macros.h"  // for DISABLE_COPY_AND_ASSIGN
+ 
+-namespace grpc {
+-class Channel;
+-}  // namespace grpc
+ namespace paddle {
+ namespace framework {
+ class Scope;
+diff --git a/paddle/fluid/operators/distributed/grpc/grpc_server.cc b/paddle/fluid/operators/distributed/grpc/grpc_server.cc
+index 47e114ff4b..16eedc827e 100644
+--- a/paddle/fluid/operators/distributed/grpc/grpc_server.cc
++++ b/paddle/fluid/operators/distributed/grpc/grpc_server.cc
+@@ -20,9 +20,6 @@ limitations under the License. */
+ #include "paddle/fluid/operators/distributed/grpc/grpc_serde.h"
+ #include "paddle/fluid/operators/distributed/grpc/grpc_server.h"
+ 
+-namespace grpc {
+-class ChannelArguments;
+-}  // namespace grpc
+ namespace paddle {
+ namespace framework {
+ class Variable;
+diff --git a/paddle/fluid/operators/distributed/grpc/grpc_server.h b/paddle/fluid/operators/distributed/grpc/grpc_server.h
+index 3d68b7e8ce..ee6950205b 100644
+--- a/paddle/fluid/operators/distributed/grpc/grpc_server.h
++++ b/paddle/fluid/operators/distributed/grpc/grpc_server.h
+@@ -37,10 +37,6 @@ limitations under the License. */
+ #include "paddle/fluid/operators/distributed/sendrecvop_utils.h"
+ #include "paddle/fluid/platform/profiler.h"
+ 
+-namespace grpc {
+-class ServerCompletionQueue;
+-}  // namespace grpc
+-
+ namespace paddle {
+ namespace operators {
+ namespace distributed {
+diff --git a/paddle/fluid/operators/distributed/grpc/grpc_service.h b/paddle/fluid/operators/distributed/grpc/grpc_service.h
+index 95b6810ec6..f9180522bd 100644
+--- a/paddle/fluid/operators/distributed/grpc/grpc_service.h
++++ b/paddle/fluid/operators/distributed/grpc/grpc_service.h
+@@ -32,11 +32,6 @@
+ //       requests without too much copying of the tensor data.
+ 
+ namespace grpc {
+-class CompletionQueue;
+-class Channel;
+-class RpcService;
+-class ServerCompletionQueue;
+-class ServerContext;
+ 
+ // Support parsing/unparsing of tensorflow::VariableResponse.
+ // Wire-format is identical to RecvVariableResponse.
 diff --git a/cmake/external/warpctc.cmake b/cmake/external/warpctc.cmake
 index 2a9600dec5..b9cfceb190 100644
 --- a/cmake/external/warpctc.cmake
@@ -151,26 +197,6 @@ index 38dc4c99fc..a7022e81ae 100644
  
  namespace paddle {
  namespace framework {
-diff --git a/paddle/fluid/operators/distributed/grpc/grpc_service.h b/paddle/fluid/operators/distributed/grpc/grpc_service.h
-index 4515229389..b717c07d22 100644
---- a/paddle/fluid/operators/distributed/grpc/grpc_service.h
-+++ b/paddle/fluid/operators/distributed/grpc/grpc_service.h
-@@ -32,11 +32,13 @@
- //       requests without too much copying of the tensor data.
- 
- namespace grpc {
--class CompletionQueue;
-+#ifndef PADDLE_WITH_SYSTEM_GRPC
- class Channel;
--class RpcService;
-+class CompletionQueue;
- class ServerCompletionQueue;
- class ServerContext;
-+#endif /* PADDLE_WITH_SYSTEM_GRPC */
-+class RpcService;
- 
- // Support parsing/unparsing of tensorflow::VariableResponse.
- // Wire-format is identical to RecvVariableResponse.
 diff --git a/python/paddle/dataset/flowers.py b/python/paddle/dataset/flowers.py
 index 969ad3c922..0f6b9b4058 100644
 --- a/python/paddle/dataset/flowers.py
@@ -197,29 +223,6 @@ index 969ad3c922..0f6b9b4058 100644
  __all__ = ['train', 'test', 'valid']
  
  DATA_URL = 'http://paddlemodels.bj.bcebos.com/flowers/102flowers.tgz'
-diff --git a/python/paddle/dataset/sentiment.py b/python/paddle/dataset/sentiment.py
-index 721cb5a819..c16ddaab82 100644
---- a/python/paddle/dataset/sentiment.py
-+++ b/python/paddle/dataset/sentiment.py
-@@ -27,11 +27,16 @@ import collections
- from itertools import chain
- 
- import os
--import nltk
--from nltk.corpus import movie_reviews
- import zipfile
- from functools import cmp_to_key
- 
-+try:
-+    import nltk
-+    from nltk.corpus import movie_reviews
-+except ImportError:
-+    import sys
-+    sys.stderr.write("nltk not installed, dataset.sentiment is unavailable\n")
-+
- import paddle.dataset.common
- 
- URL = "https://corpora.bj.bcebos.com/movie_reviews%2Fmovie_reviews.zip"
 diff --git a/python/paddle/dataset/voc2012.py b/python/paddle/dataset/voc2012.py
 index 5068893765..4a714e9e6f 100644
 --- a/python/paddle/dataset/voc2012.py
@@ -235,88 +238,5 @@ index 5068893765..4a714e9e6f 100644
 +except ImportError:
 +    import sys
 +    sys.stderr.write("PIL not installed, dataset.voc2012 is unavailable\n")
- 
+
  __all__ = ['train', 'test', 'val']
- 
-diff --git a/python/paddle/fluid/contrib/slim/core/config.py b/python/paddle/fluid/contrib/slim/core/config.py
-index cbe1c736fe..a49c70244f 100644
---- a/python/paddle/fluid/contrib/slim/core/config.py
-+++ b/python/paddle/fluid/contrib/slim/core/config.py
-@@ -13,7 +13,6 @@
- # limitations under the License.
- 
- import inspect
--import funcsigs
- import yaml
- from collections import OrderedDict
- from ..prune import *
-@@ -23,6 +22,11 @@ from ..distillation import *
- from ..searcher import *
- from ..nas import *
- 
-+try:
-+    from inspect import signature
-+except ImportError:
-+    from funcsigs import signature
-+
- __all__ = ['ConfigFactory']
- """This factory is used to create instances by loading and parsing configure file with yaml format.
- """
-@@ -50,7 +54,7 @@ class ConfigFactory(object):
-     def _new_instance(self, name, attrs):
-         if name not in self.instances:
-             class_ = globals()[attrs['class']]
--            sig = funcsigs.signature(class_.__init__)
-+            sig = signature(class_.__init__)
-             keys = [
-                 param.name for param in sig.parameters.values()
-                 if (param.kind == param.POSITIONAL_OR_KEYWORD)
-diff --git a/python/paddle/fluid/contrib/slim/prune/prune_strategy.py b/python/paddle/fluid/contrib/slim/prune/prune_strategy.py
-index bbdebf3e53..e7377737c3 100644
---- a/python/paddle/fluid/contrib/slim/prune/prune_strategy.py
-+++ b/python/paddle/fluid/contrib/slim/prune/prune_strategy.py
-@@ -19,7 +19,6 @@ from ....log_helper import get_logger
- from .... import layers
- import prettytable as pt
- import numpy as np
--from scipy.optimize import leastsq
- import copy
- import re
- import os
-@@ -27,6 +26,13 @@ import pickle
- import logging
- import sys
- 
-+try:
-+    from scipy.optimize import leastsq
-+except ImportError:
-+    import sys
-+    sys.stderr.write("scipy not installed, slim is unavailable")
-+
-+
- __all__ = ['SensitivePruneStrategy', 'UniformPruneStrategy', 'PruneStrategy']
- 
- _logger = get_logger(
-diff --git a/python/paddle/incubate/hapi/datasets/flowers.py b/python/paddle/incubate/hapi/datasets/flowers.py
-index 6f56cc82c1..0778d7c488 100644
---- a/python/paddle/incubate/hapi/datasets/flowers.py
-+++ b/python/paddle/incubate/hapi/datasets/flowers.py
-@@ -18,11 +18,16 @@ import os
- import io
- import tarfile
- import numpy as np
--import scipy.io as scio
- from PIL import Image
-
- from paddle.io import Dataset
- from .utils import _check_exists_and_download
-
-+try:
-+    import scipy.io as scio
-+except ImportError:
-+    import sys
-+    sys.stderr.write("scipy not installed, flowers dataset is unavailable")
-+
- __all__ = ["Flowers"]
-
- DATA_URL = 'http://paddlemodels.bj.bcebos.com/flowers/102flowers.tgz'
