@@ -107,8 +107,7 @@ build_() {
 
 package_emacs-git() {
   provides=('emacs')
-  conflicts=('emacs-nox')
-  replaces=('emacs-nox')
+  conflicts=('emacs' 'emacs-nox')
   depends+=('alsa-lib' 'giflib' 'gtk3' 'harfbuzz' 'libjpeg-turbo' 'libotf' 'm17n-lib' 'xorgproto')
 
   if [[ ! $NOCAIRO == "YES" ]]; then
@@ -147,8 +146,7 @@ package_emacs-git() {
 
 package_emacs-nox-git() {
   provides=('emacs-nox')
-  conflicts=('emacs')
-  replaces=('emacs')
+  conflicts=('emacs' 'emacs-git')
 
   NOX="YES"
   build_
