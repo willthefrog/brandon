@@ -9,6 +9,7 @@ pkgdesc='A performant and modular runtime for TensorFlow.'
 arch=('x86_64')
 url='https://github.com/tensorflow/runtime'
 license=('Apache')
+depends=(cuda)
 makedepends=(gcc clang bazel)
 provides=(tfrt)
 conflicts=(tfrt)
@@ -23,8 +24,8 @@ pkgver() {
 
 build() {
   cd "${pkgbase}"
-  bazel build -c opt //tools:bef_executor
-  bazel build -c opt //tools:tfrt_translate
+  bazel build -c opt --config=cuda --repo_env=CUDA_PATH=/opt/cuda //tools:bef_executor
+  bazel build -c opt --config=cuda --repo_env=CUDA_PATH=/opt/cuda //tools:tfrt_translate
 }
 
 package() {
