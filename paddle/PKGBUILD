@@ -50,8 +50,8 @@ build() {
       -DCUDA_ARCH_BIN=60,70,75 \
       -DWITH_TESTING=OFF \
       -DCMAKE_BUILD_TYPE=Release \
-      -DCMAKE_C_FLAGS='-march=skylake -Wno-error=maybe-uninitialized -Wno-error=format-truncation= -Wno-error=parentheses -Wno-error=cast-function-type -Wno-error=stringop-truncation -Wno-error=catch-value= ' \
-      -DCMAKE_CXX_FLAGS='-march=skylake -Wno-error=maybe-uninitialized -Wno-error=format-truncation= -Wno-error=parentheses -Wno-error=cast-function-type -Wno-error=stringop-truncation -Wno-error=catch-value= ' \
+      -DCMAKE_C_FLAGS='-march=skylake -Wno-error=unused-variable -Wno-error=unused-but-set-variable -Wno-error=maybe-uninitialized -Wno-error=format-truncation= -Wno-error=parentheses -Wno-error=cast-function-type -Wno-error=stringop-truncation -Wno-error=catch-value= ' \
+      -DCMAKE_CXX_FLAGS='-march=skylake -Wno-error=unused-variable -Wno-error=unused-but-set-variable -Wno-error=maybe-uninitialized -Wno-error=format-truncation= -Wno-error=parentheses -Wno-error=cast-function-type -Wno-error=stringop-truncation -Wno-error=catch-value= ' \
       -B build
   CUDA_HOME='/opt/cuda' cmake --build build -j"$(nproc)"
 }
