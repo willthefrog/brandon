@@ -13,7 +13,7 @@ index 5846dc22c3..0e0bc400bb 100755
 @@ -195,6 +196,10 @@ else()
      message(WARNING "On inference mode, will take place some specific optimization. Turn on the ON_INFER flag when building inference_lib only.")
  endif()
- 
+
 +if (WITH_SYSTEM_GRPC)
 +    add_definitions(-DPADDLE_WITH_SYSTEM_GRPC)
 +endif()
@@ -28,7 +28,7 @@ index 536e95c1dc..8c5a434048 100644
 @@ -13,6 +13,39 @@
  # limitations under the License.
  #
- 
+
 +IF(NOT WITH_DISTRIBUTE)
 +    return()
 +ENDIF()
@@ -63,7 +63,7 @@ index 536e95c1dc..8c5a434048 100644
 +ENDIF()
 +
  include (ExternalProject)
- 
+
  SET(GRPC_SOURCES_DIR ${THIRD_PARTY_PATH}/grpc)
 diff --git a/paddle/fluid/operators/distributed/grpc/grpc_client.h b/paddle/fluid/operators/distributed/grpc/grpc_client.h
 index 22ca74a67e..fbf2a3c407 100644
@@ -72,7 +72,7 @@ index 22ca74a67e..fbf2a3c407 100644
 @@ -46,9 +46,6 @@ limitations under the License. */
  #include "paddle/fluid/operators/distributed/sendrecvop_utils.h"
  #include "paddle/fluid/platform/macros.h"  // for DISABLE_COPY_AND_ASSIGN
- 
+
 -namespace grpc {
 -class Channel;
 -}  // namespace grpc
@@ -86,7 +86,7 @@ index 47e114ff4b..16eedc827e 100644
 @@ -20,9 +20,6 @@ limitations under the License. */
  #include "paddle/fluid/operators/distributed/grpc/grpc_serde.h"
  #include "paddle/fluid/operators/distributed/grpc/grpc_server.h"
- 
+
 -namespace grpc {
 -class ChannelArguments;
 -}  // namespace grpc
@@ -100,7 +100,7 @@ index 3d68b7e8ce..ee6950205b 100644
 @@ -37,10 +37,6 @@ limitations under the License. */
  #include "paddle/fluid/operators/distributed/sendrecvop_utils.h"
  #include "paddle/fluid/platform/profiler.h"
- 
+
 -namespace grpc {
 -class ServerCompletionQueue;
 -}  // namespace grpc
@@ -114,14 +114,14 @@ index 95b6810ec6..f9180522bd 100644
 +++ b/paddle/fluid/operators/distributed/grpc/grpc_service.h
 @@ -32,11 +32,6 @@
  //       requests without too much copying of the tensor data.
- 
+
  namespace grpc {
 -class CompletionQueue;
 -class Channel;
 -class RpcService;
 -class ServerCompletionQueue;
 -class ServerContext;
- 
+
  // Support parsing/unparsing of tensorflow::VariableResponse.
  // Wire-format is identical to RecvVariableResponse.
 diff --git a/cmake/external/warpctc.cmake b/cmake/external/warpctc.cmake
@@ -170,7 +170,7 @@ index 04f22d7fc8..e969a72037 100644
 @@ -132,7 +132,7 @@ macro(SET_PROTOBUF_VERSION)
      STRING(REGEX MATCH "[0-9]+.[0-9]+" PROTOBUF_VERSION "${PROTOBUF_VERSION}")
  endmacro()
- 
+
 -set(PROTOBUF_ROOT "" CACHE PATH "Folder contains protobuf")
 +set(PROTOBUF_ROOT "/usr" CACHE PATH "Folder contains protobuf")
  IF (WIN32)
@@ -179,10 +179,10 @@ index 04f22d7fc8..e969a72037 100644
 @@ -234,7 +234,7 @@ FUNCTION(build_protobuf TARGET_NAME BUILD_FOR_HOST)
      )
  ENDFUNCTION()
- 
+
 -SET(PROTOBUF_VERSION 3.1.0)
 +SET(PROTOBUF_VERSION 3.12.0)
- 
+
  IF(NOT PROTOBUF_FOUND)
      build_protobuf(extern_protobuf FALSE)
 diff --git a/paddle/fluid/framework/ir/coalesce_grad_tensor_pass.h b/paddle/fluid/framework/ir/coalesce_grad_tensor_pass.h
@@ -194,9 +194,27 @@ index 38dc4c99fc..a7022e81ae 100644
  #pragma once
  #include <algorithm>
 +#include <cstdint>
- 
+
  namespace paddle {
  namespace framework {
+diff --git a/python/paddle/dataset/voc2012.py b/python/paddle/dataset/voc2012.py
+index 5068893765..4a714e9e6f 100644
+--- a/python/paddle/dataset/voc2012.py
++++ b/python/paddle/dataset/voc2012.py
+@@ -27,7 +27,12 @@ import io
+ import numpy as np
+ from paddle.dataset.common import download
+ from paddle.dataset.image import *
+ import paddle.utils.deprecated as deprecated
+-from PIL import Image
++
++try:
++    from PIL import Image
++except ImportError:
++    import sys
++    sys.stderr.write("PIL not installed, dataset.voc2012 is unavailable\n")
+
+ __all__ = ['train', 'test', 'val']
 diff --git a/python/paddle/dataset/flowers.py b/python/paddle/dataset/flowers.py
 index 969ad3c922..0f6b9b4058 100644
 --- a/python/paddle/dataset/flowers.py
@@ -221,22 +239,5 @@ index 969ad3c922..0f6b9b4058 100644
 +    sys.stderr.write("scipy not installed, dataset.flowers is unavailable\n")
 +
  __all__ = ['train', 'test', 'valid']
- 
- DATA_URL = 'http://paddlemodels.bj.bcebos.com/flowers/102flowers.tgz'
-diff --git a/python/paddle/dataset/voc2012.py b/python/paddle/dataset/voc2012.py
-index 5068893765..4a714e9e6f 100644
---- a/python/paddle/dataset/voc2012.py
-+++ b/python/paddle/dataset/voc2012.py
-@@ -26,7 +26,12 @@ import io
- import numpy as np
- from paddle.dataset.common import download
- from paddle.dataset.image import *
--from PIL import Image
-+
-+try:
-+    from PIL import Image
-+except ImportError:
-+    import sys
-+    sys.stderr.write("PIL not installed, dataset.voc2012 is unavailable\n")
 
- __all__ = ['train', 'test', 'val']
+ DATA_URL = 'http://paddlemodels.bj.bcebos.com/flowers/102flowers.tgz'
