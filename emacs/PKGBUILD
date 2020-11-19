@@ -20,7 +20,7 @@ url="http://www.gnu.org/software/emacs/"
 license=('GPL3')
 depends=('gnutls' 'libxml2' 'jansson' 'gpm' 'libgccjit')
 makedepends=('git' 'alsa-lib' 'giflib' 'gtk3' 'harfbuzz' 'libjpeg-turbo' 'libotf' 'm17n-lib' 'xorgproto')
-source=("$pkgbase::git://github.com/flatwhatson/emacs.git#branch=pgtk-nativecomp")
+source=("$pkgbase::git://git.savannah.gnu.org/emacs.git#branch=feature/native-comp")
 options=(!strip)
 md5sums=('SKIP')
 
@@ -65,7 +65,7 @@ build_() {
   if [[ $NOX == "YES" ]]; then
     _conf+=( '--without-x' '--with-x-toolkit=no' '--with-sound=no' '--without-xft' '--without-lcms2' '--without-rsvg' );
   else
-    _conf+=( '--with-x-toolkit=gtk3' '--with-pgtk' '--with-sound=alsa' '--without-xaw3d' );
+    _conf+=( '--with-x-toolkit=gtk3' '--with-sound=alsa' '--without-xaw3d' );
     if [[ $XWIDGETS == "YES" ]]; then
         _conf+=( '--with-xwidgets' );
     fi
