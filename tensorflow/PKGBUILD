@@ -28,8 +28,7 @@ pkgver() {
 
 prepare() {
   cd "${pkgbase}"
-  _bazelver=`pacman -Qi bazel | grep -oP "Version.*: \K([\d.]+)(?=-.)"`
-  echo "${_bazelver}-" > .bazelversion
+  rm .bazelversion
 }
 
 build() {
@@ -66,8 +65,7 @@ build() {
   fi
 
   bazel build --config=v2 --config=opt --config=nohdfs --config=noaws --config=short_logs \
-    $CACHE_FLAGS --incompatible_no_support_tools_in_action_inputs=false \
-    //tensorflow/tools/pip_package:build_pip_package
+    $CACHE_FLAGS //tensorflow/tools/pip_package:build_pip_package
   bazel-bin/tensorflow/tools/pip_package/build_pip_package "${srcdir}"/tmpoptcuda
 }
 
