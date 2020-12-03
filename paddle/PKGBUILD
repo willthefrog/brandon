@@ -33,12 +33,14 @@ prepare() {
 build() {
   cd "$pkgbase"
 
+  _pyver="$(python -c 'import sys; print("%s.%s" %sys.version_info[0:2])')"
+
   CUDNN_ROOT="/usr" \
   CC=/opt/cuda/bin/gcc \
   CXX=/opt/cuda/bin/g++ \
   cmake \
       -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
-      -DPY_VERSION=3.8  \
+      -DPY_VERSION=${_pyver}  \
       -DWITH_DISTRIBUTE=ON \
       -DWITH_SYSTEM_GRPC=ON \
       -DWITH_GPU=ON \
