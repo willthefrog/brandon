@@ -17,7 +17,7 @@ optdepends=('python-nltk: for sentiment dataset'
             'python-rarfile: for mq2007 dataset'
             'python-scipy: for flower dataset and slim')
 source=("${pkgbase}::git+${url}.git" 'arch_build.patch')
-sha512sums=('SKIP' '1c97a0d07d40d22a92a80c3b329151b289aa366fbd4b9dd0872480700b63964ae95a96f662593560d4e54da497b889928d035224f3eb63956da3251a723d3d6c')
+sha512sums=('SKIP' '596207d3c46ef9384398c960efdca1ca2c59b008d487b41563a46b8c278ca7c45d602ca5a43a5173c18ef2d0acc2d1910f4a8199bc599ca971105a658efeb199')
 options=('!strip')
 
 pkgver() {

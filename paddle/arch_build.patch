@@ -1,26 +1,3 @@
-diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 5846dc22c3..0e0bc400bb 100755
---- a/CMakeLists.txt
-+++ b/CMakeLists.txt
-@@ -83,6 +83,7 @@ option(WITH_XBYAK       "Compile with xbyak support"                    ON)
- option(WITH_CONTRIB     "Compile the third-party contributation"        OFF)
- option(REPLACE_ENFORCE_GLOG "Replace PADDLE_ENFORCE with glog/CHECK for better debug." OFF)
- option(WITH_GRPC     "Use grpc as the default rpc framework"            ${WITH_DISTRIBUTE})
-+option(WITH_SYSTEM_GRPC  "Use system grpc instead of third party"       OFF)
- option(WITH_INFERENCE_API_TEST   "Test fluid inference C++ high-level api interface"  OFF)
- option(WITH_HIGH_LEVEL_API_TEST   "Test fluid python high-level api interface"  OFF)
- option(PY_VERSION       "Compile PaddlePaddle with python3 support"     ${PY_VERSION})
-@@ -195,6 +196,10 @@ else()
-     message(WARNING "On inference mode, will take place some specific optimization. Turn on the ON_INFER flag when building inference_lib only.")
- endif()
-
-+if (WITH_SYSTEM_GRPC)
-+    add_definitions(-DPADDLE_WITH_SYSTEM_GRPC)
-+endif()
-+
- add_subdirectory(paddle)
- if(WITH_PYTHON)
-     add_subdirectory(python)
 diff --git a/cmake/external/grpc.cmake b/cmake/external/grpc.cmake
 index 536e95c1dc..8c5a434048 100644
 --- a/cmake/external/grpc.cmake
@@ -197,3 +174,92 @@ index 38dc4c99fc..a7022e81ae 100644
 
  namespace paddle {
  namespace framework {
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index d0cff762e2..c05b9dbabd 100755
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -136,6 +136,7 @@ option(WITH_BOX_PS      "Compile with box_ps support"                   OFF)
+ option(WITH_XBYAK       "Compile with xbyak support"                    ON)
+ option(WITH_CONTRIB     "Compile the third-party contributation"        OFF)
+ option(WITH_GRPC     "Use grpc as the default rpc framework"            ${WITH_DISTRIBUTE})
++option(WITH_SYSTEM_GRPC  "Use system grpc instead of third party"       OFF)
+ option(WITH_INFERENCE_API_TEST   "Test fluid inference C++ high-level api interface"  OFF)
+ option(PY_VERSION       "Compile PaddlePaddle with python3 support"     ${PY_VERSION})
+ option(WITH_DGC   "Use DGC(Deep Gradient Compression) or not" ${WITH_DISTRIBUTE})
+@@ -147,6 +148,10 @@ option(WITH_ARM   "Compile PaddlePaddle with arm support"         OFF)
+ option(WITH_SW   "Compile PaddlePaddle with sw support"         OFF)
+ option(WITH_MUSL        "Compile with musl libc instead of gblic"  OFF)
+ 
++if (WITH_SYSTEM_GRPC)
++    add_definitions(-DPADDLE_WITH_SYSTEM_GRPC)
++endif()
++
+ # PY_VERSION
+ if(NOT PY_VERSION)
+   set(PY_VERSION 2.7)
+@@ -240,12 +245,6 @@ if(WITH_PROFILER)
+     add_definitions(-DWITH_GPERFTOOLS)
+ endif()
+ 
+-if(WITH_DISTRIBUTE)
+-    if(LINUX)
+-        set(WITH_GLOO ON CACHE STRING "Enable GLOO when compiling WITH_DISTRIBUTE=ON." FORCE)
+-    endif()
+-endif()
+-
+ include(ccache)             # set ccache for compilation
+ include(util)               # set unittest and link libs
+ include(version)            # set PADDLE_VERSION
+diff --git a/python/paddle/distributed/parallel.py b/python/paddle/distributed/parallel.py
+index 4d60db6f06..ab8ab0c138 100644
+--- a/python/paddle/distributed/parallel.py
++++ b/python/paddle/distributed/parallel.py
+@@ -141,20 +141,6 @@ def init_parallel_env():
+     _check_var_exists("PADDLE_TRAINERS_NUM")
+     _check_var_exists("PADDLE_TRAINER_ENDPOINTS")
+ 
+-    # 3: init gloo context (step 1: httpsever start)
+-    ep_rank_0 = parallel_env.trainer_endpoints[0].split(":")
+-    ep_rank = parallel_env.trainer_endpoints[parallel_env.rank].split(":")
+-    manager = Manager()
+-    # glboal dict to store status
+-    http_server_d = manager.dict()
+-    http_server_d["running"] = False
+-    if parallel_env.rank == 0:
+-        http_server = Process(
+-            target=_start_kv_server, args=(int(ep_rank_0[1]), http_server_d))
+-        http_server.daemon = True
+-        http_server_d["running"] = True
+-        http_server.start()
+-
+     # 4. init NCCL ParallelStrategy
+     strategy = ParallelStrategy()
+     if parallel_helper._is_parallel_ctx_initialized():
+@@ -177,27 +163,6 @@ def init_parallel_env():
+     parallel_helper._set_parallel_ctx(core.NCCLParallelContext(strategy, place))
+     parallel_helper._init_parallel_ctx()
+ 
+-    # 5: init gloo context (step 2: gloo init)
+-    # dividing init_gloo into two part beacause nccl and gloo
+-    # are separately looking for free ports which sometimes
+-    # leads to port-conflict.
+-    wait_server_ready([parallel_env.trainer_endpoints[0]])
+-
+-    gloo_strategy = core.GlooParallelStrategy()
+-    gloo_strategy.rank = parallel_env.rank
+-    gloo_strategy.rank_num = parallel_env.world_size
+-    gloo_strategy.ip_address = ep_rank_0[0]
+-    gloo_strategy.ip_port = int(ep_rank_0[1])
+-    default_init_timeout_seconds = 3600
+-    default_run_timeout_seconds = 9999999
+-    gloo_strategy.init_seconds = default_init_timeout_seconds
+-    gloo_strategy.run_seconds = default_run_timeout_seconds
+-    gloo = core.GlooParallelContext(gloo_strategy)
+-    gloo.init()
+-    if parallel_env.rank == 0:
+-        http_server_d["running"] = False
+-        http_server.join()
+-
+ 
+ def get_rank():
+     """
