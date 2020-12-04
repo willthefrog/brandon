@@ -17,36 +17,7 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-
-    container:
-      image: 'willthefrog/makepkg'
-      options: --user root
-
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@master
-
-    - name: Setup gcloud
-      run: |
-        echo ${GCP_SA_KEY} | base64 -d > /tmp/sa_key.json
-        gcloud auth activate-service-account ${GCP_SA_EMAIL} --key-file=/tmp/sa_key.json
-
-    - name: Update pacman index
-      run: pacman -Sy
-
-    - name: Build Package
-      continue-on-error: true
-      timeout-minutes: 340
-      run: |
-        chmod 777 -R .
-        chmod 777 -R /github/home/
-        sudo -E -u arch makepkg -rsf --noconfirm
-      working-directory: ${{ github.workflow }}
-
-  finish:
-    runs-on: ubuntu-latest
-    needs: build
+    runs-on: self-hosted
 
     container:
       image: 'willthefrog/makepkg'
