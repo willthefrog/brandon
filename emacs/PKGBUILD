@@ -52,6 +52,122 @@ prepare() {
    /* FIXME: Bidi is not yet handled well in static composition.  */
    if (charpos < endpos
 __EOF__
+
+  # use hashtable for face lookup
+  patch -p1  << __EOF__
+--- a/src/frame.c
++++ b/src/frame.c
+@@ -1343,6 +1343,7 @@ DEFUN ("make-terminal-frame", Fmake_terminal_frame, Smake_terminal_frame,
+      be copied as well.  */
+   for (tem = f->face_alist; CONSP (tem); tem = XCDR (tem))
+     XSETCDR (XCAR (tem), Fcopy_sequence (XCDR (XCAR (tem))));
++  fset_face_alist (f, f->face_alist);
+
+   f->can_set_window_size = true;
+   f->after_make_frame = true;
+@@ -3786,6 +3787,21 @@ DEFUN ("set-frame-window-state-change", Fset_frame_window_state_change,
+ #endif
+ };
+
++void
++fset_face_alist (struct frame *f, Lisp_Object val)
++{
++  f->face_alist = val;
++  f->face_by_name = make_hash_table(hashtest_eq, list_length(val), DEFAULT_REHASH_SIZE, DEFAULT_REHASH_THRESHOLD, Qnil, false);
++  struct Lisp_Hash_Table *t = XHASH_TABLE(f->face_by_name);
++  for (; ! NILP (val); val = XCDR (val)) {
++      Lisp_Object key = XCAR(XCAR(val));
++      Lisp_Object value = XCDR(XCAR(val));
++      Lisp_Object hash_code;
++      hash_lookup(t, key, &hash_code);
++      hash_put(t, key, value, hash_code);
++  }
++}
++
+ #ifdef HAVE_WINDOW_SYSTEM
+
+ /* Enumeration type for switch in frame_float.  */
+
+--- a/src/frame.h
++++ b/src/frame.h
+@@ -160,6 +160,7 @@ struct frame
+
+   /* Alist of elements (FACE-NAME . FACE-VECTOR-DATA).  */
+   Lisp_Object face_alist;
++  Lisp_Object face_by_name;
+
+   /* A vector that records the entire structure of this frame's menu bar.
+      For the format of the data, see extensive comments in xmenu.c.
+@@ -660,11 +661,8 @@ fset_condemned_scroll_bars (struct frame *f, Lisp_Object val)
+ {
+   f->condemned_scroll_bars = val;
+ }
+-INLINE void
+-fset_face_alist (struct frame *f, Lisp_Object val)
+-{
+-  f->face_alist = val;
+-}
++void
++fset_face_alist (struct frame *f, Lisp_Object val);
+ #if defined (HAVE_WINDOW_SYSTEM)
+ INLINE void
+ fset_parent_frame (struct frame *f, Lisp_Object val)
+diff --git a/src/xfaces.c b/src/xfaces.c
+index 73a536b19c6..d8ebd72f6b4 100644
+--- a/src/xfaces.c
++++ b/src/xfaces.c
+@@ -1955,6 +1955,7 @@ resolve_face_name (Lisp_Object face_name, bool signal_p)
+    face text properties; Ediff uses that).
+    If SIGNAL_P, signal an error if FACE_NAME is not a valid face name.
+    Otherwise, value is nil if FACE_NAME is not a valid face name.  */
++#if 0
+ static Lisp_Object
+ lface_from_face_name_no_resolve (struct frame *f, Lisp_Object face_name,
+           bool signal_p)
+@@ -1975,6 +1976,41 @@ lface_from_face_name_no_resolve (struct frame *f, Lisp_Object face_name,
+
+   return lface;
+ }
++#else
++static Lisp_Object
++lface_from_face_name_no_resolve (struct frame *f, Lisp_Object face_name,
++                                 bool signal_p)
++{
++    Lisp_Object lface;
++
++    if (f) {
++        if (f->face_by_name) {
++            struct Lisp_Hash_Table *t = XHASH_TABLE(f->face_by_name);
++            ptrdiff_t i = hash_lookup (t, face_name, NULL);
++            if (i >= 0) {
++                lface = HASH_VALUE(t, i);
++                check_lface (lface);
++                return lface;
++            }
++        }
++
++        if (signal_p)
++            signal_error ("Invalid face", face_name);
++        return Qnil;
++    } else {
++        lface = assq_no_quit (face_name, Vface_new_frame_defaults);
++
++        if (CONSP (lface))
++            lface = XCDR (lface);
++        else if (signal_p)
++            signal_error ("Invalid face", face_name);
++
++        check_lface (lface);
++
++        return lface;
++    }
++}
++#endif
+
+ /* Return the face definition of FACE_NAME on frame F.  F null means
+    return the definition for new frames.  FACE_NAME may be a string or
+__EOF__
+
   [[ -x configure ]] || ( ./autogen.sh git && ./autogen.sh autoconf )
 }
 
