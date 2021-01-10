@@ -8,7 +8,7 @@ pkgrel=1
 arch=('x86_64')
 url='https://github.com/google/jax'
 license=('Apache')
-makedepends=(git gcc bazel cuda cudnn nccl python-setuptools python-scipy cython)
+makedepends=(git gcc bazel cuda cudnn nccl python-pip python-wheel python-scipy cython)
 depends=(absl-py python-numpy)
 source=("${pkgbase}::git+${url}.git")
 md5sums=('SKIP')
@@ -38,6 +38,7 @@ build() {
   else
     nccl_header='/usr/include/nccl.h'
   fi
+  cuda_ver=`pacman -Qi cuda | grep -oP "Version.*: \K(\d+\.\d+)"`
 
   GCC_HOST_COMPILER_PATH=`readlink /opt/cuda/bin/gcc`                                        \
   HOST_CXX_COMPILER_PATH=`readlink /opt/cuda/bin/g++`                                        \
@@ -48,7 +49,15 @@ build() {
   TF_CUDA_VERSION=$(/opt/cuda/bin/nvcc --version | sed -n 's/^.*release \(.*\),.*/\1/p')     \
   TF_CUDNN_VERSION=$(sed -n 's/^#define CUDNN_MAJOR\s*\(.*\).*/\1/p' '/usr/include/cudnn.h') \
   TF_NCCL_VERSION=$(sed -n 's/^#define NCCL_MAJOR\s*\(.*\).*/\1/p' ${nccl_header})           \
-  python build/build.py --bazel_path=`which bazel` --enable_cuda --cuda_path=/opt/cuda --cudnn_path=${cudnn_path} --bazel_startup_options='--max_idle_secs=300'
+  python build/build.py --bazel_path=`which bazel` --enable_cuda --cuda_path=/opt/cuda --cuda_version=${cuda_ver} --cudnn_path=${cudnn_path} --bazel_startup_options='--max_idle_secs=300'
+}
+
+python_site_path() {
+  $1 - <<END
+from __future__ import print_function
+import site
+print(site.getsitepackages()[0])
+END
 }
 
 package_python-jax-git() {
@@ -60,17 +69,18 @@ package_python-jax-git() {
 
   cd "${pkgbase}"
   python setup.py install --root="$pkgdir" --optimize=1
+  rm -rf "$pkgdir$(python_site_path `which python`)/jaxlib"
 }
 
 package_python-jaxlib-cuda-git() {
   pkgdesc='XLA library for JAX',
-  depends+=(cuda cudnn nccl absl-py python-protobuf python-scipy)
+  depends+=(cuda cudnn nccl python-protobuf python-scipy)
   provides=(python-jaxlib)
   conflicts=(python-jaxlib)
   replaces=(python-jaxlib)
 
-  cd "${pkgbase}/build"
-  python setup.py install --root="$pkgdir" --optimize=1
+  WHEEL_PACKAGE=$(find "${pkgbase}"/dist -name "*.whl")
+  pip install --ignore-installed --upgrade --root "${pkgdir}"/ $WHEEL_PACKAGE --no-dependencies
 }
 
 # vim: set ts=2 sw=2:
