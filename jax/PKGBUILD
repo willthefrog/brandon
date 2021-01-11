@@ -21,6 +21,19 @@ pkgver() {
 prepare() {
   cd "${pkgbase}"
   rm .bazelversion
+
+  patch -p1  << __EOF__
+--- a/build/build.py
++++ b/build/build.py
+@@ -499,7 +499,6 @@ def main():
+     f"--output_path={output_path}"])
+   print(" ".join(command))
+   shell(command)
+-  shell([bazel_path, "shutdown"])
+
+
+ if __name__ == "__main__":
+__EOF__
 }
 
 build() {
