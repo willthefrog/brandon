@@ -121,8 +121,7 @@ build() {
         -DUSE_MPI=OFF                            \
         -DUSE_MKLDNN=OFF                         \
         -DUSE_GLOO=ON                            \
-        -DUSE_SYSTEM_NCCL=ON                     \
-        -DUSE_FAST_NVCC=ON
+        -DUSE_SYSTEM_NCCL=ON
   cmake --build build -j"$(nproc)"
   touch build/build.ninja
   python setup.py build
