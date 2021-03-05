@@ -191,7 +191,7 @@ build_() {
     # Good luck!
    --without-gconf
    --without-gsettings
-   --with-nativecomp
+   --with-native-compilation
   )
 
   if [[ $NOX == "YES" ]]; then
