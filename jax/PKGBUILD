@@ -25,17 +25,7 @@ prepare() {
   patch -p1  << __EOF__
 --- a/build/build.py
 +++ b/build/build.py
-@@ -271,9 +271,6 @@ build:short_logs --output_filter=DONT_MATCH_ANYTHING
- # Workaround for gcc 10+ warnings related to upb.
- # See https://github.com/tensorflow/tensorflow/issues/39467
- build:linux --copt=-Wno-stringop-truncation
--
--# Build with Cloud TPU support.
--build --define=with_tpu_support=true
- """
-
-
-@@ -509,7 +506,6 @@ def main():
+@@ -499,7 +499,6 @@ def main():
      f"--output_path={output_path}"])
    print(" ".join(command))
    shell(command)
