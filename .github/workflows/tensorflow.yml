@@ -12,16 +12,80 @@ env:
   GCP_SA_EMAIL: ${{ secrets.GCP_SA_EMAIL }}
   GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
   GCS_BUCKET: ${{ secrets.GCS_BUCKET }}
-  BAZEL_CACHE_BUCKET: ${{ secrets.BAZEL_CACHE_BUCKET }}
-  BAZEL_CACHE_AUTH: /tmp/sa_key.json
+  GKE_REGION: ${{ secrets.GKE_REGION }}
+  GKE_PROJECT: ${{ secrets.GKE_PROJECT }}
+  GKE_CLUSTER: ${{ secrets.GKE_CLUSTER }}
+  ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
 
 jobs:
-  build:
-    runs-on: self-hosted
+  startup:
+    runs-on: ubuntu-latest
 
     container:
       image: 'willthefrog/makepkg'
       options: --user root
+
+    steps:
+    - name: Setup gcloud
+      run: |
+        echo ${GCP_SA_KEY} | base64 -d > /tmp/sa_key.json
+        gcloud auth activate-service-account ${GCP_SA_EMAIL} --key-file=/tmp/sa_key.json
+
+    - name: Setup GKE
+      run: |
+        gcloud container clusters get-credentials ${GKE_CLUSTER} --region ${GKE_REGION} --project=${GKE_PROJECT}
+
+    - name: Deploy a runner job on GKE
+      run: |
+        pacman -Sy --noconfirm kubectl
+        kubectl apply -f - << __EOF__
+        apiVersion: batch/v1
+        kind: Job
+        metadata:
+          name: github-action-runner
+        spec:
+          activeDeadlineSeconds: 21600
+          template:
+            metadata:
+              labels:
+                run: github-action-runner
+            spec:
+              restartPolicy: Never
+              containers:
+              - name: github-action-runner
+                image: willthefrog/actions
+                env:
+                  - name: GITHUB_REPO
+                    value: "willthefrog/brandon"
+                  - name: TOKEN
+                    value: "${ACCESS_TOKEN}"
+                lifecycle:
+                  preStop:
+                    exec:
+                      command:
+                        [
+                      '/bin/bash',
+                      '-c',
+                      'RUNNER_ALLOW_RUNASROOT=1 /var/lib/github-actions-runner/bin/Runner.Listener remove --token \$(curl -sS --data "" -H "Authorization: Bearer \$TOKEN" https://api.github.com/repos/$GITHUB_REPO/actions/runners/remove-token | grep -oP "\"token\": \"\K\w+")'
+                        ]
+                resources:
+                    limits:
+                      memory: "16Gi"
+                      cpu: "8"
+                      ephemeral-storage: "10Gi"
+                    requests:
+                      memory: "16Gi"
+                      cpu: "8"
+                      ephemeral-storage: "10Gi"
+        __EOF__
+
+    - name: Wait for runner startup
+      run: |
+        sleep 300
+
+  build:
+    needs: startup
+    runs-on: self-hosted
 
     steps:
     - name: Checkout repository
@@ -33,16 +97,38 @@ jobs:
         gcloud auth activate-service-account ${GCP_SA_EMAIL} --key-file=/tmp/sa_key.json
 
     - name: Update pacman index
-      run: pacman -Sy
+      run: sudo pacman -Sy
 
     - name: Build Package
       run: |
-        chmod 777 -R .
-        chmod 777 -R /github/home/
-        sudo -E -u arch makepkg -rsf --noconfirm
+        makepkg -rsf --noconfirm
       working-directory: ${{ github.workflow }}
 
     - name: Upload Package
       run: |
         gsutil cp *.zst ${GCS_BUCKET}
       working-directory: ${{ github.workflow }}
+
+  teardown:
+    if: always()
+    needs: build
+    runs-on: ubuntu-latest
+
+    container:
+      image: 'willthefrog/makepkg'
+      options: --user root
+
+    steps:
+    - name: Setup gcloud
+      run: |
+        echo ${GCP_SA_KEY} | base64 -d > /tmp/sa_key.json
+        gcloud auth activate-service-account ${GCP_SA_EMAIL} --key-file=/tmp/sa_key.json
+
+    - name: Setup GKE
+      run: |
+        gcloud container clusters get-credentials ${GKE_CLUSTER} --region ${GKE_REGION} --project=${GKE_PROJECT}
+
+    - name: Deploy a runner job on GKE
+      run: |
+        pacman -Sy --noconfirm kubectl
+        kubectl delete job github-action-runner
