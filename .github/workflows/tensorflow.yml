@@ -38,6 +38,9 @@ jobs:
     - name: Deploy a runner job on GKE
       run: |
         pacman -Sy --noconfirm kubectl
+        kubectl create secret generic github-action-runner-creds \
+          --from-literal=GITHUB_REPO='willthefrog/brandon' \
+          --from-literal=TOKEN="${ACCESS_TOKEN}"
         kubectl apply -f - << __EOF__
         apiVersion: batch/v1
         kind: Job
@@ -56,9 +59,15 @@ jobs:
                 image: willthefrog/actions
                 env:
                   - name: GITHUB_REPO
-                    value: "willthefrog/brandon"
+                    valueFrom:
+                      secretKeyRef:
+                        name: github-action-runner-creds
+                        key: GITHUB_REPO
                   - name: TOKEN
-                    value: "${ACCESS_TOKEN}"
+                    valueFrom:
+                      secretKeyRef:
+                        name: github-action-runner-creds
+                        key: TOKEN
                 lifecycle:
                   preStop:
                     exec:
