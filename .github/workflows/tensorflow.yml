@@ -147,7 +147,8 @@ jobs:
       run: |
         gcloud container clusters get-credentials ${GKE_CLUSTER} --region ${GKE_REGION} --project=${GKE_PROJECT}
 
-    - name: Deploy a runner job on GKE
+    - name: Delete runner job and persistent volume
       run: |
         pacman -Sy --noconfirm kubectl
         kubectl delete job github-action-runner
+        kubectl delete pvc cache
