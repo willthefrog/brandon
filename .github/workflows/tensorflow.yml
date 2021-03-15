@@ -54,9 +54,16 @@ jobs:
                 run: github-action-runner
             spec:
               restartPolicy: Never
+              volumes:
+              - name: cache
+                persistentVolumeClaim:
+                  claimName: cache
               containers:
               - name: github-action-runner
                 image: willthefrog/actions
+                volumeMounts:
+                - name: cache
+                  mountPath: /var/lib/github-actions-runner/.cache
                 env:
                   - name: GITHUB_REPO
                     valueFrom:
@@ -86,6 +93,18 @@ jobs:
                       memory: "16Gi"
                       cpu: "8"
                       ephemeral-storage: "10Gi"
+        ---
+        apiVersion: v1
+        kind: PersistentVolumeClaim
+        metadata:
+          name: cache
+        spec:
+          accessModes:
+          - ReadWriteOnce
+          resources:
+            requests:
+              storage: 20Gi
+          storageClassName: standard-rwo
         __EOF__
 
     - name: Wait for runner startup
