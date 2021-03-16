@@ -48,16 +48,18 @@ jobs:
                 run: github-action-runner
             spec:
               restartPolicy: Never
+              securityContext:
+                fsGroup: 1000
               volumes:
-              - name: cache
+              - name: home
                 persistentVolumeClaim:
-                  claimName: cache
+                  claimName: home
               containers:
               - name: github-action-runner
                 image: willthefrog/actions
                 volumeMounts:
-                - name: cache
-                  mountPath: /var/lib/github-actions-runner/.cache
+                - name: home
+                  mountPath: /home/arch/
                 env:
                   - name: GITHUB_REPO
                     value: "willthefrog/brandon"
@@ -85,7 +87,7 @@ jobs:
         apiVersion: v1
         kind: PersistentVolumeClaim
         metadata:
-          name: cache
+          name: home
         spec:
           accessModes:
           - ReadWriteOnce
@@ -145,4 +147,4 @@ jobs:
     - name: Delete runner job and persistent volume
       run: |
         kubectl delete job github-action-runner
-        kubectl delete pvc cache
+        kubectl delete pvc home
