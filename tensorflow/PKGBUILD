@@ -64,7 +64,7 @@ build() {
     CACHE_FLAGS="--remote_http_cache=https://storage.googleapis.com/${BAZEL_CACHE_BUCKET} --google_credentials=${BAZEL_CACHE_AUTH}"
   fi
 
-  bazel build --config=v2 --config=opt --config=nohdfs --config=noaws --config=short_logs \
+  bazel build ${MAKEFLAGS} --config=v2 --config=opt --config=nohdfs --config=noaws --config=short_logs \
     $CACHE_FLAGS //tensorflow/tools/pip_package:build_pip_package
   bazel-bin/tensorflow/tools/pip_package/build_pip_package "${srcdir}"/tmpoptcuda
 }

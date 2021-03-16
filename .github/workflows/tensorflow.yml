@@ -121,6 +121,8 @@ jobs:
       run: |
         makepkg -rsf --noconfirm
       working-directory: ${{ github.workflow }}
+      env:
+        MAKEFLAGS: "-j 8"
 
     - name: Upload Package
       run: |
