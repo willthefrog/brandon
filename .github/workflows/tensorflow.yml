@@ -76,11 +76,11 @@ jobs:
                         ]
                 resources:
                     limits:
-                      memory: "16Gi"
+                      memory: "24Gi"
                       cpu: "8"
                       ephemeral-storage: "10Gi"
                     requests:
-                      memory: "16Gi"
+                      memory: "24Gi"
                       cpu: "8"
                       ephemeral-storage: "10Gi"
         ---
