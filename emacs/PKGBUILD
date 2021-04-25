@@ -20,7 +20,7 @@ url="http://www.gnu.org/software/emacs/"
 license=('GPL3')
 depends=('gnutls' 'libxml2' 'jansson' 'gpm' 'libgccjit')
 makedepends=('git' 'alsa-lib' 'giflib' 'gtk3' 'harfbuzz' 'libjpeg-turbo' 'libotf' 'm17n-lib' 'xorgproto')
-source=("$pkgbase::git://git.savannah.gnu.org/emacs.git#branch=feature/native-comp")
+source=("$pkgbase::git://git.savannah.gnu.org/emacs.git")
 options=(!strip)
 md5sums=('SKIP')
 
