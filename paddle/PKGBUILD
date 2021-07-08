@@ -11,7 +11,7 @@ url='https://github.com/PaddlePaddle/Paddle'
 license=(apache)
 depends=('grep' 'cuda' 'cudnn' 'nccl' 'tensorrt' 'grpc' 'hdf5' 'python-numpy' 'python-protobuf'
          'python-pillow' 'python-requests' 'python-decorator' 'python-pyaml' 'python-py-cpuinfo'
-         'python-prettytable' 'python-objgraph' 'python-astor' 'python-gast' 'python-netifaces')
+         'python-prettytable' 'python-objgraph' 'python-astor' 'python-netifaces')
 makedepends=('git' 'cmake' 'patchelf' 'wget' 'python-pip' 'python-wheel')
 optdepends=('python-nltk: for sentiment dataset'
             'python-rarfile: for mq2007 dataset'
@@ -54,16 +54,15 @@ prepare() {
 
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -166,7 +166,7 @@ option(WITH_BOX_PS      "Compile with box_ps support"                   OFF)
+@@ -196,7 +196,7 @@ option(WITH_PSLIB       "Compile with pslib support"                    OFF)
+ option(WITH_BOX_PS      "Compile with box_ps support"                   OFF)
  option(WITH_XBYAK       "Compile with xbyak support"                    ON)
  option(WITH_CONTRIB     "Compile the third-party contributation"        OFF)
- option(WITH_GRPC     "Use grpc as the default rpc framework"            \${WITH_DISTRIBUTE})
 -option(WITH_PSCORE     "Compile with parameter server support"         \${WITH_DISTRIBUTE})
-+option(WITH_PSCORE     "Compile with parameter server support"         OFF)
++option(WITH_PSCORE     "Compile with parameter server support"          OFF)
+ option(WITH_HETERPS     "Compile with heterps"                          OFF})
  option(WITH_INFERENCE_API_TEST   "Test fluid inference C++ high-level api interface"  OFF)
  option(PY_VERSION       "Compile PaddlePaddle with python3 support"     \${PY_VERSION})
- option(WITH_DGC   "Use DGC(Deep Gradient Compression) or not" \${WITH_DISTRIBUTE})
-
 __EOF__
 
 }
@@ -97,6 +96,7 @@ build() {
 }
 
 package() {
+  depends=('python-gast<=0.4.0')
   TMP_PKG=`find "${srcdir}/${pkgbase}/build/python/dist" -name "*.whl"`
   pip install --ignore-installed --upgrade --root $pkgdir/ $TMP_PKG --no-dependencies --no-warn-script-location
 
