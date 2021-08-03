@@ -21,6 +21,11 @@ pkgver() {
   echo "$(git log -1 --format="%cd" --date=short | sed 's|-||g').r$(git rev-list --count HEAD)".$(git describe --always | sed 's/.*-//g')
 }
 
+prepare() {
+  cd "${pkgbase}"
+  rm .bazelversion
+}
+
 build() {
   cd "${pkgbase}"
   bazel build -c opt //tools:bef_executor
