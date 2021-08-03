@@ -13,25 +13,25 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      GCP_SA_EMAIL: ${{ secrets.GCP_SA_EMAIL }}
-      GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
-      GCS_BUCKET: ${{ secrets.GCS_BUCKET }}
+      UPTOC_UPLOADER_AK: ${{ secrets.STORAGE_AK }}
+      UPTOC_UPLOADER_SK: ${{ secrets.STORAGE_SK }}
 
     container:
-      image: 'willthefrog/makepkg'
-      options: --user root
+      image: 'archlinux:base-devel'
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@master
 
-    - name: Setup gcloud
+    - name: Setup user
       run: |
-        echo ${GCP_SA_KEY} | base64 -d > /tmp/sa_key.json
-        gcloud auth activate-service-account ${GCP_SA_EMAIL} --key-file=/tmp/sa_key.json
+        useradd -Ums /bin/bash arch
+        cat > /etc/sudoers.d/passwd <<__EOF__
+        ALL ALL = (ALL) NOPASSWD: ALL
+        __EOF__
 
-    - name: Update pacman index
-      run: pacman -Sy
+    - name: Install packages
+      run: pacman -Sy --noconfirm git
 
     - name: Build Package
       run: |
@@ -40,6 +40,9 @@ jobs:
       working-directory: ${{ github.workflow }}
 
     - name: Upload Package
-      run: |
-        gsutil cp *.zst ${GCS_BUCKET}
-      working-directory: ${{ github.workflow }}
+      uses: saltbo/uptoc@master
+      with:
+        driver: google
+        region: auto
+        bucket: ${{ secrets.STORAGE_BUCKET }}
+        dist: "${{ github.workflow }}/*.zst"
