@@ -9,51 +9,75 @@ pkgname='libgccjit'
 pkgver="${_gccver}"
 pkgrel=`pacman -Qi gcc | grep -oP "Version.*: .*-\K([\d.]+)"`
 pkgdesc='Just-In-Time Compilation using GCC.'
-url='https://gcc.gnu.org/wiki/JIT'
+arch=(x86_64)
 license=(GPL3)
+url='https://gcc.gnu.org/wiki/JIT'
+makedepends=(binutils libmpc)
+depends=(glibc libmpc "gcc-libs=$pkgver")
+options=('!emptydirs')
 source=("ftp://gcc.gnu.org/pub/gcc/releases/$_gccsrc/$_gccsrc.tar.xz")
 sha512sums=('SKIP')
-arch=('i686' 'x86_64')
-depends=('glibc' 'libmpc' 'zlib')
-makedepends=('binutils' 'gcc-ada' 'libmpc>=0.8.1' 'gmp>=4.3.2' 'mpfr>=2.4.2')
-checkdepends=('dejagnu')
-options=('!emptydirs')
 
 prepare() {
   cd "$srcdir/$_gccsrc"
-  sed -i 's@\./fixinc\.sh@-c true@' gcc/Makefile.in
+
+ # Do not run fixincludes
+ sed -i 's@\./fixinc\.sh@-c true@' gcc/Makefile.in
+
+ # Arch Linux installs x86_64 libraries /lib
+ sed -i '/m64=/s/lib64/lib/' gcc/config/i386/t-linux64
+
+ # hack! - some configure tests for header files using "$CPP $CPPFLAGS"
+ sed -i "/ac_cpp=/s/\$CPPFLAGS/\$CPPFLAGS -O2/" {libiberty,gcc}/configure
 }
 
 build() {
   install -d "$srcdir/$pkgname-build"
   cd "$srcdir/$pkgname-build"
 
-  CPPFLAGS="$CPPFLAGS -O2"
+ CFLAGS=${CFLAGS/-Werror=format-security/}
+ CXXFLAGS=${CXXFLAGS/-Werror=format-security/}
 
   ../$_gccsrc/configure \
-    --prefix="/usr" \
-    --libexecdir="/usr/lib" \
-    --with-system-zlib \
-    --with-bugurl='https://github.com/jashandeep-sohi/libgccjit-pkg/issues' \
-    --with-linker-hash-style=gnu \
-    --enable-host-shared \
-    --enable-shared \
-    --enable-checking=release \
-    --enable-languages=jit \
-    --enable-linker-build-id \
-    --enable-checking=release \
-    --disable-multilib \
-    --disable-bootstrap \
-    --disable-libssp \
-    --disable-lto \
-    --disable-libquadmath \
-    --disable-liboffloadmic \
-    --disable-libada \
-    --disable-libsanitizer \
-    --disable-libquadmath-support \
-    --disable-libgomp \
-    --disable-libvtv \
-    --disable-libsanitizer
+     --libdir=/usr/lib \
+     --libexecdir=/usr/lib \
+     --mandir=/usr/share/man \
+     --infodir=/usr/share/info \
+     --with-bugurl=https://aur.archlinux.org/packages/libgccjit/ \
+     --enable-languages=jit \
+     --with-linker-hash-style=gnu \
+     --with-system-zlib \
+     --enable-__cxa_atexit \
+     --enable-cet=auto \
+     --enable-checking=release \
+     --enable-clocale=gnu \
+     --enable-default-pie \
+     --enable-default-ssp \
+     --enable-gnu-indirect-function \
+     --enable-gnu-unique-object \
+     --enable-install-libiberty \
+     --enable-linker-build-id \
+     --enable-lto \
+     --enable-multilib \
+     --enable-plugin \
+     --enable-shared \
+     --enable-host-shared \
+     --enable-threads=posix \
+     --disable-bootstrap \
+     --disable-multilib \
+     --disable-libssp \
+     --disable-lto \
+     --disable-libquadmath \
+     --disable-liboffloadmic \
+     --disable-libada \
+     --disable-libsanitizer \
+     --disable-libquadmath-support \
+     --disable-libgomp \
+     --disable-libvtv \
+     --disable-libsanitizer \
+     --disable-libstdcxx-pch \
+     --disable-libunwind-exceptions \
+     --disable-werror
 
   make -j`nproc`
 }
