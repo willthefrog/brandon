@@ -104,8 +104,9 @@ build() {
   INSTALL_DIR="$srcdir/$pkgbase/torch"
 
   cmake -GNinja -B build -S .                    \
-        -DCMAKE_EXPORT_COMPILE_COMMANDS=ON       \
-        -DTORCH_CUDA_ARCH_LIST="5.0+PTX;7.0" \
+        -DUSE_FAST_NVCC=ON                       \
+        -DUSE_PRECOMPILED_HEADERS=ON             \
+        -DTORCH_CUDA_ARCH_LIST="5.0+PTX;7.0"     \
         -DCMAKE_INSTALL_PREFIX=$INSTALL_DIR      \
         -DATEN_NO_TEST=ON                        \
         -DBUILD_PYTHON=ON                        \
