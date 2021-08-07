@@ -27,63 +27,6 @@ pkgver() {
 prepare() {
   cd "$pkgbase"
   git submodule update --init --recursive
-
-  patch -p1  << __EOF__
---- a/cmake/public/cuda.cmake
-+++ b/cmake/public/cuda.cmake
-@@ -21,9 +21,6 @@ list(APPEND CMAKE_MODULE_PATH \${CMAKE_CURRENT_LIST_DIR}/../Modules_CUDA_fix)
- # More details can be found in the following links.
- # https://github.com/pytorch/pytorch/issues/20635
- # https://github.com/pytorch/pytorch/issues/17108
--if(NOT MSVC)
--  set(CUDA_USE_STATIC_CUDA_RUNTIME OFF CACHE INTERNAL "")
--endif()
-
- # Find CUDA.
- find_package(CUDA)
-__EOF__
-
-# re-enable `RTLD_GLOBAL`, see
-# https://github.com/pytorch/pytorch/pull/31162
-  patch -p1  << __EOF__
---- a/torch/_utils_internal.py
-+++ b/torch/_utils_internal.py
-@@ -62,4 +62,4 @@ TEST_MASTER_PORT = 29500
- USE_GLOBAL_DEPS = True
- # USE_RTLD_GLOBAL_WITH_LIBTORCH controls whether __init__.py tries to load
- # _C.so with RTLD_GLOBAL during the call to dlopen.
--USE_RTLD_GLOBAL_WITH_LIBTORCH = False
-+USE_RTLD_GLOBAL_WITH_LIBTORCH = True
-__EOF__
-
-# set include path when checking for nccl version
-  patch -p1  << __EOF__
---- a/cmake/Modules/FindNCCL.cmake
-+++ b/cmake/Modules/FindNCCL.cmake
-@@ -72,6 +72,7 @@ if(NCCL_FOUND)  # obtaining NCCL version and some sanity checks
-       }
- ")
-     try_run(NCCL_VERSION_MATCHED compile_result \${PROJECT_BINARY_DIR} \${file}
-+          CMAKE_FLAGS "-DINCLUDE_DIRECTORIES:STRING=\${NCCL_INCLUDE_DIRS}"
-           RUN_OUTPUT_VARIABLE NCCL_VERSION_FROM_HEADER
-           LINK_LIBRARIES \${NCCL_LIBRARIES})
-     if (NOT NCCL_VERSION_MATCHED)
-__EOF__
-
-  # patch gloo to remove cudart dependency
-  cd third_party/gloo
-  patch -p1  << __EOF__
---- a/cmake/Cuda.cmake
-+++ b/cmake/Cuda.cmake
-@@ -151,7 +151,6 @@ else()
- endif()
-
- include_directories(SYSTEM \${CUDA_INCLUDE_DIRS})
--list(APPEND gloo_DEPENDENCY_LIBS \${CUDA_CUDART_LIBRARY})
-
- # Find libcuda.so and lbnvrtc.so
- # For libcuda.so, we will find it under lib, lib64, and then the
-__EOF__
 }
 
 build() {
