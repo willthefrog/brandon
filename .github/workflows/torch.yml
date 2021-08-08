@@ -10,6 +10,17 @@ on:
     - cron: '0 18 * * 6'
 
 jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Clean up unused tools to save some space
+      run: |
+        rm -rf /usr/share/dotnet
+        rm -rf /opt/ghc
+        rm -rf "/usr/local/share/boost"
+        rm -rf "$AGENT_TOOLSDIRECTORY"
+
   build:
     runs-on: ubuntu-latest
 
