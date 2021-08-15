@@ -2,7 +2,7 @@ name: tfrt
 on:
   push:
     paths:
-      - tfrt/*
+      - tfrt/**
       - .github/workflows/tfrt.yml
   repository_dispatch:
   schedule:

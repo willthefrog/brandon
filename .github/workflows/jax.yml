@@ -2,7 +2,7 @@ name: jax
 on:
   push:
     paths:
-      - jax/*
+      - jax/**
       - .github/workflows/jax.yml
   repository_dispatch:
   schedule:

@@ -2,8 +2,8 @@ name: torch
 on:
   push:
     paths:
-      - torch/*
-      - torchvision/*
+      - torch/**
+      - torchvision/**
       - .github/workflows/torch.yml
   repository_dispatch:
   schedule:

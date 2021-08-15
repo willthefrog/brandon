@@ -2,7 +2,7 @@ name: tensorboard
 on:
   push:
     paths:
-      - tensorboard/*
+      - tensorboard/**
       - .github/workflows/tensorboard.yml
   repository_dispatch:
   schedule:

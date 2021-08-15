@@ -2,8 +2,8 @@ name: emacs
 on:
   push:
     paths:
-      - emacs/*
-      - libgccjit/*
+      - emacs/**
+      - libgccjit/**
       - .github/workflows/emacs.yml
   repository_dispatch:
   schedule:
