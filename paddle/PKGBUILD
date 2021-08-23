@@ -72,9 +72,13 @@ build() {
 
   _pyver="$(python -c 'import sys; print("%s.%s" %sys.version_info[0:2])')"
 
+  if [ -e /opt/cuda/bin/gcc ]; then
+    export CC=/opt/cuda/bin/gcc
+  fi
+  if [ -e /opt/cuda/bin/g++ ]; then
+    export CXX=/opt/cuda/bin/g++
+  fi
   CUDNN_ROOT="/usr" \
-  CC=/opt/cuda/bin/gcc \
-  CXX=/opt/cuda/bin/g++ \
   cmake \
       -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
       -DPY_VERSION=${_pyver}  \

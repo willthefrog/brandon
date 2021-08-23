@@ -34,8 +34,13 @@ prepare() {
 build() {
   cd "${pkgbase}"
 
-  GCC_HOST_COMPILER_PATH=/opt/cuda/bin/gcc                                                         \
-  HOST_CXX_COMPILER_PATH=/opt/cuda/bin/g++                                                         \
+  if [ -e /opt/cuda/bin/gcc ]; then
+    export GCC_HOST_COMPILER_PATH=/opt/cuda/bin/gcc
+  fi
+  if [ -e /opt/cuda/bin/g++ ]; then
+    export HOST_CXX_COMPILER_PATH=/opt/cuda/bin/g++
+  fi
+
   TF_CUDA_COMPUTE_CAPABILITIES=6.1,7.0                                                             \
   PYTHON_BIN_PATH=/usr/bin/python                                                                  \
   USE_DEFAULT_PYTHON_LIB_PATH=1                                                                    \
@@ -64,7 +69,7 @@ build() {
     CACHE_FLAGS="--remote_http_cache=https://storage.googleapis.com/${BAZEL_CACHE_BUCKET} --google_credentials=${BAZEL_CACHE_AUTH}"
   fi
 
-  bazel build ${MAKEFLAGS} --config=v2 --config=opt --config=nohdfs --config=noaws --config=short_logs \
+  bazel build ${MAKEFLAGS} --config=v2 --config=opt --config=native_arch_linux --config=nohdfs --config=noaws --config=short_logs \
     $CACHE_FLAGS //tensorflow/tools/pip_package:build_pip_package
   bazel-bin/tensorflow/tools/pip_package/build_pip_package "${srcdir}"/tmpoptcuda
 }

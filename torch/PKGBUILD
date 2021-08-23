@@ -32,8 +32,12 @@ prepare() {
 build() {
   cd "$pkgbase"
 
-  export CC=/opt/cuda/bin/gcc
-  export CXX=/opt/cuda/bin/g++
+  if [ -e /opt/cuda/bin/gcc ]; then
+    export CC=/opt/cuda/bin/gcc
+  fi
+  if [ -e /opt/cuda/bin/g++ ]; then
+    export CXX=/opt/cuda/bin/g++
+  fi
   export CFLAGS="-march=skylake -mtune=generic -O2 -pipe -fstack-protector-strong"
   export CXXFLAGS="-march=skylake -mtune=generic -O2 -pipe -fstack-protector-strong"
   export CUDA_BIN_PATH=/opt/cuda

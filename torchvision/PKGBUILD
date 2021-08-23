@@ -30,9 +30,13 @@ prepare() {
 
 build() {
   cd "$pkgbase"
+  if [ -e /opt/cuda/bin/gcc ]; then
+    export CC=/opt/cuda/bin/gcc
+  fi
+  if [ -e /opt/cuda/bin/g++ ]; then
+    export CXX=/opt/cuda/bin/g++
+  fi
   MAX_JOBS=`nproc` \
-  CC=/opt/cuda/bin/gcc \
-  CXX=/opt/cuda/bin/g++ \
   FORCE_CUDA=1 \
   TORCH_CUDA_ARCH_LIST="5.0+PTX;6.1;7.0" \
   python setup.py build
