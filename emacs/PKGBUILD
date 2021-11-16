@@ -8,21 +8,21 @@ LTO="YES"         # Enable link-time optimization. Not that experimental anymore
 NOGZ="YES"        # Don't compress .el files.
 NOX=              # CLI only binary.
 NOCAIRO=          # Disable here.
-XWIDGETS=         # Use GTK+ widgets pulled from webkit2gtk. Usable.
 
 pkgname=(emacs-git emacs-nox-git)
 pkgbase=emacs
-pkgver=28.0.50.141102
+pkgver=29.0.50.150793
 pkgrel=1
 pkgdesc="GNU Emacs. Development master branch."
 arch=('x86_64')
 url="http://www.gnu.org/software/emacs/"
 license=('GPL3')
 depends=('gnutls' 'libxml2' 'jansson' 'gpm' 'libgccjit')
-makedepends=('git' 'alsa-lib' 'giflib' 'gtk3' 'harfbuzz' 'libjpeg-turbo' 'libotf' 'm17n-lib' 'xorgproto')
-source=("$pkgbase::git://git.savannah.gnu.org/emacs.git")
+makedepends=('git' 'alsa-lib' 'giflib' 'gtk3' 'harfbuzz' 'libjpeg-turbo' 'libotf' 'm17n-lib')
+source=("$pkgbase::git://git.savannah.gnu.org/emacs.git#branch=feature/pgtk"
+        "rebase.patch::https://github.com/emacs-mirror/emacs/compare/feature/pgtk...master.diff")
 options=(!strip)
-md5sums=('SKIP')
+md5sums=('SKIP' 'SKIP')
 
 pkgver() {
   cd "$pkgbase"
@@ -30,13 +30,14 @@ pkgver() {
   printf "%s.%s" \
     "$(grep AC_INIT configure.ac | \
     sed -e 's/^.\+\ \([0-9]\+\.[0-9]\+\.[0-9]\+\?\).\+$/\1/')" \
-    "$(git rev-list --count HEAD)"
+    "$(curl -I -k "https://api.github.com/repos/emacs-mirror/emacs/commits?per_page=1" | sed -n '/^[Ll]ink:/ s/.*"next".*page=\([0-9]*\).*"last".*/\1/p')"
 }
 
 # There is no need to run autogen.sh after first checkout.
 # Doing so, breaks incremental compilation.
 prepare() {
   cd "$pkgbase"
+  patch -p1 -i ../rebase.patch
   [[ -x configure ]] || ( ./autogen.sh git && ./autogen.sh autoconf )
 }
 
@@ -66,10 +67,7 @@ build_() {
   if [[ $NOX == "YES" ]]; then
     _conf+=( '--without-x' '--with-x-toolkit=no' '--with-sound=no' '--without-xft' '--without-lcms2' '--without-rsvg' );
   else
-    _conf+=( '--with-x-toolkit=gtk3' '--with-sound=alsa' '--without-xaw3d' );
-    if [[ $XWIDGETS == "YES" ]]; then
-        _conf+=( '--with-xwidgets' );
-    fi
+    _conf+=( '--with-pgtk' '--without-xwidgets' '--without-xaw3d' '--with-sound=alsa' );
   fi
 
   if [[ $NOCAIRO == "YES" ]] || [[ $NOX == "YES" ]]; then
@@ -109,14 +107,10 @@ build_() {
 package_emacs-git() {
   provides=('emacs')
   conflicts=('emacs' 'emacs-nox')
-  depends+=('alsa-lib' 'giflib' 'gtk3' 'harfbuzz' 'libjpeg-turbo' 'libotf' 'm17n-lib' 'xorgproto')
+  depends+=('alsa-lib' 'giflib' 'gtk3' 'harfbuzz' 'libjpeg-turbo' 'libotf' 'm17n-lib')
 
   if [[ ! $NOCAIRO == "YES" ]]; then
     depends+=( 'cairo' );
-  fi
-
-  if [[ $XWIDGETS == "YES" ]]; then
-    depends+=( 'webkit2gtk' );
   fi
 
   NOX=""
