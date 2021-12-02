@@ -37,7 +37,7 @@ jobs:
         __EOF__
 
     - name: Install packages
-      run: pacman -Sy --noconfirm git rclone gcc
+      run: pacman -Syu --noconfirm git rclone gcc
 
     - name: Build and install libgccjit
       run: |
