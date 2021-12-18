@@ -14,7 +14,7 @@ provides=('python-torch')
 conflicts=('python-torch')
 depends=('python-future' 'python-numpy' 'python-cffi' 'python-yaml' 'python-typing_extensions'
          'cuda' 'cudnn' 'nccl')
-makedepends=('git' 'ninja' 'cmake' 'python-setuptools')
+makedepends=('git' 'ninja' 'cmake' 'python-setuptools' 'mold')
 optdepends=('python-tqdm: model zoo progress bar')
 source=("${pkgbase}::git+https://github.com/pytorch/pytorch.git")
 md5sums=('SKIP')
@@ -46,6 +46,8 @@ build() {
   export TORCH_NVCC_FLAGS="-Xfatbin -compress-all"
 
   export PYTORCH_BUILD_VERSION=`grep "version = '" setup.py | sed -E "s/version = '(.*)'/\1/"`
+  export LD_PRELOAD='/usr/lib/mold/mold-wrapper.so'
+  export MOLD_PATH='/usr/bin/mold'
   PYTHON3_INC=`python -c "import sysconfig; print(sysconfig.get_config_vars('INCLUDEPY')[0])"`
   PYTHON3_LIB=`python -c "import sysconfig; print('/'.join(sysconfig.get_config_vars('LIBDIR', 'INSTSONAME')))"`
   INSTALL_DIR="$srcdir/$pkgbase/torch"
