@@ -8,145 +8,53 @@ on:
   schedule:
     - cron: '0 18 * * 6'
 
-env:
-  GCP_SA_EMAIL: ${{ secrets.GCP_SA_EMAIL }}
-  GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
-  GCS_BUCKET: ${{ secrets.GCS_BUCKET }}
-  GKE_REGION: ${{ secrets.GKE_REGION }}
-  GKE_PROJECT: ${{ secrets.GKE_PROJECT }}
-  GKE_CLUSTER: ${{ secrets.GKE_CLUSTER }}
-  ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-
 jobs:
-  startup:
+  cleanup:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Set up gcloud
-      uses: google-github-actions/setup-gcloud@master
-      with:
-        project_id: ${{ secrets.GKE_PROJECT }}
-        service_account_key: ${{ secrets.GCP_SA_KEY }}
-        export_default_credentials: true
-
-    - name: Setup GKE
+    - name: Clean up unused tools to save some space
       run: |
-        gcloud container clusters get-credentials ${GKE_CLUSTER} --region ${GKE_REGION} --project=${GKE_PROJECT}
-
-    - name: Deploy a runner job on GKE
-      run: |
-        kubectl apply -f - << __EOF__
-        apiVersion: batch/v1
-        kind: Job
-        metadata:
-          name: github-action-runner
-        spec:
-          activeDeadlineSeconds: 21600
-          template:
-            metadata:
-              labels:
-                run: github-action-runner
-            spec:
-              restartPolicy: Never
-              securityContext:
-                fsGroup: 1000
-              volumes:
-              - name: home
-                persistentVolumeClaim:
-                  claimName: home
-              containers:
-              - name: github-action-runner
-                image: willthefrog/actions
-                volumeMounts:
-                - name: home
-                  mountPath: /home/arch/
-                env:
-                  - name: GITHUB_REPO
-                    value: "willthefrog/brandon"
-                  - name: TOKEN
-                    value: "${ACCESS_TOKEN}"
-                lifecycle:
-                  preStop:
-                    exec:
-                      command:
-                        [
-                      '/bin/bash',
-                      '-c',
-                      'RUNNER_ALLOW_RUNASROOT=1 /var/lib/github-actions-runner/bin/Runner.Listener remove --token \$(curl -sS --data "" -H "Authorization: Bearer \$TOKEN" https://api.github.com/repos/$GITHUB_REPO/actions/runners/remove-token | grep -oP "\"token\": \"\K\w+")'
-                        ]
-                resources:
-                    limits:
-                      memory: "24Gi"
-                      cpu: "8"
-                      ephemeral-storage: "10Gi"
-                    requests:
-                      memory: "24Gi"
-                      cpu: "8"
-                      ephemeral-storage: "10Gi"
-        ---
-        apiVersion: v1
-        kind: PersistentVolumeClaim
-        metadata:
-          name: home
-        spec:
-          accessModes:
-          - ReadWriteOnce
-          resources:
-            requests:
-              storage: 20Gi
-          storageClassName: standard-rwo
-        __EOF__
-
-    - name: Wait for runner startup
-      run: |
-        kubectl wait --for=condition=ready pod -l run=github-action-runner --timeout=600s
+        rm -rf /usr/share/dotnet
+        rm -rf /opt/ghc
+        rm -rf "/usr/local/share/boost"
+        rm -rf "$AGENT_TOOLSDIRECTORY"
 
   build:
-    needs: startup
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
+    env:
+      RCLONE_S3_PROVIDER: ${{ secrets.S3_PROVIDER }}
+      RCLONE_S3_ENV_AUTH: true
+      RCLONE_S3_ACCESS_KEY_ID: ${{ secrets.S3_ACCESS_KEY_ID }}
+      RCLONE_S3_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_ACCESS_KEY }}
+      RCLONE_S3_ENDPOINT: ${{ secrets.S3_ENDPOINT }}
+      RCLONE_S3_STORAGE_CLASS: STANDARD
+      RCLONE_S3_BUCKET: ${{ secrets.S3_BUCKET }}
+
+    container:
+      image: 'archlinux:base-devel'
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@master
 
-    - name: Setup gcloud
+    - name: Setup user
       run: |
-        echo ${GCP_SA_KEY} | base64 -d > /tmp/sa_key.json
-        gcloud auth activate-service-account ${GCP_SA_EMAIL} --key-file=/tmp/sa_key.json
+        useradd -Ums /bin/bash arch
+        cat > /etc/sudoers.d/passwd <<__EOF__
+        ALL ALL = (ALL) NOPASSWD: ALL
+        __EOF__
 
-    - name: Update pacman index
-      run: sudo pacman -Sy
+    - name: Install packages
+      run: pacman -Sy --noconfirm git rclone
 
     - name: Build Package
       run: |
-        makepkg -rsf --noconfirm
+        chmod 777 -R .
+        sudo -u arch makepkg -rsf --noconfirm
       working-directory: ${{ github.workflow }}
-      env:
-        MAKEFLAGS: "-j 8"
 
     - name: Upload Package
       run: |
-        gsutil cp *.zst ${GCS_BUCKET}
+        rclone copy *.zst :s3:${RCLONE_S3_BUCKET}
       working-directory: ${{ github.workflow }}
-
-  teardown:
-    if: always()
-    needs: build
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Set up gcloud
-      uses: google-github-actions/setup-gcloud@master
-      with:
-        project_id: ${{ secrets.GKE_PROJECT }}
-        service_account_key: ${{ secrets.GCP_SA_KEY }}
-        export_default_credentials: true
-
-    - name: Setup GKE
-      run: |
-        gcloud container clusters get-credentials ${GKE_CLUSTER} --region ${GKE_REGION} --project=${GKE_PROJECT}
-
-    - name: Delete runner job and persistent volume
-      run: |
-        kubectl delete job github-action-runner
-        kubectl delete pvc home
