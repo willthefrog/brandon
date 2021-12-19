@@ -19,10 +19,9 @@ url="http://www.gnu.org/software/emacs/"
 license=('GPL3')
 depends=('gnutls' 'libxml2' 'jansson' 'gpm' 'libgccjit')
 makedepends=('git' 'alsa-lib' 'giflib' 'gtk3' 'harfbuzz' 'libjpeg-turbo' 'libotf' 'm17n-lib')
-source=("$pkgbase::git://git.savannah.gnu.org/emacs.git#branch=feature/pgtk"
-        "rebase.patch::https://github.com/emacs-mirror/emacs/compare/feature/pgtk...master.diff")
+source=("$pkgbase::git://git.savannah.gnu.org/emacs.git")
 options=(!strip)
-md5sums=('SKIP' 'SKIP')
+md5sums=('SKIP')
 
 pkgver() {
   cd "$pkgbase"
@@ -37,7 +36,6 @@ pkgver() {
 # Doing so, breaks incremental compilation.
 prepare() {
   cd "$pkgbase"
-  patch -p1 -i ../rebase.patch
   [[ -x configure ]] || ( ./autogen.sh git && ./autogen.sh autoconf )
 }
 
