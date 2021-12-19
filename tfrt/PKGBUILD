@@ -9,7 +9,7 @@ pkgdesc='A performant and modular runtime for TensorFlow.'
 arch=('x86_64')
 url='https://github.com/tensorflow/runtime'
 license=('Apache')
-makedepends=(gcc clang bazel python)
+makedepends=(gcc clang bazel python mold)
 provides=(tfrt)
 conflicts=(tfrt)
 replaces=(tfrt)
@@ -28,6 +28,9 @@ prepare() {
 
 build() {
   cd "${pkgbase}"
+
+  export LD_PRELOAD='/usr/lib/mold/mold-wrapper.so'
+  export MOLD_PATH='/usr/bin/mold'
   bazel build -c opt //tools:bef_executor
   bazel build -c opt //tools:tfrt_translate
 }

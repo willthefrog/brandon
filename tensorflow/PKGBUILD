@@ -12,7 +12,7 @@ arch=('x86_64')
 depends=(cuda cudnn nccl tensorrt python-protobuf python-h5py python-numpy absl-py python-wrapt python-termcolor
          python-astunparse python-tensorflow-estimator python-opt_einsum python-astor python-gast
          python-keras-applications python-keras-preprocessing)
-makedepends=(bazel git gcc python-pip python-wheel)
+makedepends=(bazel git gcc python-pip python-wheel mold)
 optdepends=('tensorboard: Tensorflow visualization toolkit'
             'python-pasta: for tf_upgrade_v2 script')
 conflicts=(python-tensorflow)
@@ -40,6 +40,9 @@ build() {
   if [ -e /opt/cuda/bin/g++ ]; then
     export HOST_CXX_COMPILER_PATH=/opt/cuda/bin/g++
   fi
+
+  export LD_PRELOAD='/usr/lib/mold/mold-wrapper.so'
+  export MOLD_PATH='/usr/bin/mold'
 
   TF_CUDA_COMPUTE_CAPABILITIES=6.1,7.0                                                             \
   PYTHON_BIN_PATH=/usr/bin/python                                                                  \

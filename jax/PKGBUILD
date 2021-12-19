@@ -8,7 +8,7 @@ pkgrel=1
 arch=('x86_64')
 url='https://github.com/google/jax'
 license=('Apache')
-makedepends=(git gcc bazel cuda cudnn nccl python-pip python-wheel python-scipy cython)
+makedepends=(git gcc bazel cuda cudnn nccl python-pip python-wheel python-scipy cython mold)
 depends=(absl-py python-numpy)
 source=("${pkgbase}::git+${url}.git")
 md5sums=('SKIP')
@@ -53,6 +53,8 @@ build() {
   fi
   cuda_ver=`pacman -Qi cuda | grep -oP "Version.*: \K(\d+\.\d+)"`
 
+  export LD_PRELOAD='/usr/lib/mold/mold-wrapper.so'
+  export MOLD_PATH='/usr/bin/mold'
   GCC_HOST_COMPILER_PATH=`readlink /opt/cuda/bin/gcc`                                        \
   HOST_CXX_COMPILER_PATH=`readlink /opt/cuda/bin/g++`                                        \
   TF_CUDA_COMPUTE_CAPABILITIES=6.1,7.0                                                       \
