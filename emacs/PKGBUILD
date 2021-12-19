@@ -18,7 +18,7 @@ arch=('x86_64')
 url="http://www.gnu.org/software/emacs/"
 license=('GPL3')
 depends=('gnutls' 'libxml2' 'jansson' 'gpm' 'libgccjit')
-makedepends=('git' 'mold' 'alsa-lib' 'giflib' 'gtk3' 'harfbuzz' 'libjpeg-turbo' 'libotf' 'm17n-lib')
+makedepends=('git' 'alsa-lib' 'giflib' 'gtk3' 'harfbuzz' 'libjpeg-turbo' 'libotf' 'm17n-lib')
 source=("$pkgbase::git://git.savannah.gnu.org/emacs.git")
 options=(!strip)
 md5sums=('SKIP')
@@ -43,9 +43,6 @@ build_() {
   cd "$srcdir/$pkgbase"
 
   make clean
-
-  export LD_PRELOAD='/usr/lib/mold/mold-wrapper.so'
-  export MOLD_PATH='/usr/bin/mold'
 
   local _conf=(
     --prefix=/usr
