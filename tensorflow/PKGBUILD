@@ -9,7 +9,7 @@ pkgdesc="Library for computation using data flow graphs for scalable machine lea
 url="https://www.tensorflow.org/"
 license=('APACHE')
 arch=('x86_64')
-depends=(cuda cudnn nccl tensorrt python-protobuf python-h5py python-numpy absl-py python-wrapt python-termcolor
+depends=(cuda cudnn nccl python-protobuf python-h5py python-numpy absl-py python-wrapt python-termcolor
          python-astunparse python-tensorflow-estimator python-opt_einsum python-astor python-gast
          python-keras-applications python-keras-preprocessing)
 makedepends=(bazel git gcc python-pip python-wheel mold)
@@ -54,7 +54,7 @@ build() {
   TF_NEED_OPENCL_SYCL=0                                                                            \
   TF_NEED_OPENCL=0                                                                                 \
   TF_NEED_MPI=0                                                                                    \
-  TF_NEED_TENSORRT=1                                                                               \
+  TF_NEED_TENSORRT=0                                                                               \
   TF_NEED_ROCM=0                                                                                   \
   TF_SET_ANDROID_WORKSPACE=0                                                                       \
   TF_CUDA_CLANG=0                                                                                  \
