@@ -4,6 +4,7 @@ on:
     paths:
       - emacs/**
       - libgccjit/**
+      - .github/actions/build/**
       - .github/workflows/emacs.yml
   repository_dispatch:
   schedule:
@@ -14,49 +15,24 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      RCLONE_S3_PROVIDER: ${{ secrets.S3_PROVIDER }}
-      RCLONE_S3_ENV_AUTH: true
-      RCLONE_S3_ACCESS_KEY_ID: ${{ secrets.S3_ACCESS_KEY_ID }}
-      RCLONE_S3_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_ACCESS_KEY }}
-      RCLONE_S3_ENDPOINT: ${{ secrets.S3_ENDPOINT }}
-      RCLONE_S3_STORAGE_CLASS: STANDARD
-      RCLONE_S3_BUCKET: ${{ secrets.S3_BUCKET }}
-
-    container:
-      image: 'archlinux:base-devel'
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+      S3_DEST: ${{ secrets.S3_DEST }}
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@master
 
-    - name: Setup user
-      run: |
-        useradd -Ums /bin/bash arch
-        cat > /etc/sudoers.d/passwd <<__EOF__
-        ALL ALL = (ALL) NOPASSWD: ALL
-        __EOF__
-
-    - name: Install packages
-      run: pacman -Syu --noconfirm git rclone gcc
-
-    - name: Build and install libgccjit
-      run: |
-        chmod 777 -R .
-        sudo -u arch makepkg -risf --noconfirm
-      working-directory: libgccjit
-
-    - name: Build emacs
-      run: |
-        chmod 777 -R .
-        sudo -u arch makepkg -rsf --noconfirm
-      working-directory: emacs
+    - name: Build Packages
+      uses: ./.github/actions/build
+      with:
+        packages: "libgccjit ${{ github.workflow }}"
 
     - name: Upload libgccjit
-      run: |
-        rclone copy *.zst :s3:${RCLONE_S3_BUCKET}
+      run: find -type f -iname "*.pkg.tar.zst" -exec aws s3 cp {} s3://${S3_DEST}/ \;
       working-directory: libgccjit
 
     - name: Upload emacs
-      run: |
-        find -type f -iname "*.pkg.tar.zst" -exec rclone copy {} :s3:${RCLONE_S3_BUCKET} \;
-      working-directory: emacs
+      run: find -type f -iname "*.pkg.tar.zst" -exec aws s3 cp {} s3://${S3_DEST}/ \;
+      working-directory: ${{ github.workflow }}

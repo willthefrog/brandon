@@ -7,13 +7,9 @@ This repo contains some =PKGBUILD= files for building Arch Linux packages, mostl
 [[.github/workflows/tensorflow.yml][https://github.com/willthefrog/brandon/workflows/tensorflow/badge.svg]]
 [[.github/workflows/paddle.yml][https://github.com/willthefrog/brandon/workflows/paddle/badge.svg]]
 
-** Note about Google Service Account
-- create the [[https://cloud.google.com/iam/docs/creating-managing-service-account-keys][service account key]]
-- encode to base64
-  #+BEGIN_SRC shell
-  cat keyfile.json | base64 -w0  # must disable wrapping
-  #+END_SRC
+** Note about AWS S3
 - add following secrets
-  + =GCP_SA_EMAIL=: service account email in the key file (not user account email)
-  + =GCP_SA_KEY=: the encoded base64 string
-  + =GCS_BUCKET=: bucket to store built artifact
+  + =AWS_ACCESS_KEY_ID=: AWS Access Key ID
+  + =AWS_SECRET_ACCESS_KEY=: AWS Access Key
+  + =AWS_DEFAULT_REGION=: default region
+  + =S3_DEST=: destination directory, i.e., bucket/dir, *DO NOT include trailing /*
