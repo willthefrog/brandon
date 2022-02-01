@@ -19,9 +19,37 @@ pkgver() {
   echo "$(git log -1 --format="%cd" --date=short | sed 's|-||g').r$(git rev-list --count HEAD)".$(git describe --always | sed 's/.*-//g')
 }
 
+
+prepare() {
+  cd "$pkgbase"
+  # XXX patch to fix bazel 5.0 build, see https://github.com/tensorflow/tensorboard/issues/5513
+  patch -p1  <<__EOF__
+--- a/WORKSPACE
++++ b/WORKSPACE
+@@ -2,6 +2,15 @@ workspace(name = "org_tensorflow_tensorboard")
+
+ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
++http_archive(
++  name = "build_bazel_rules_apple",
++  sha256 = "0052d452af7742c8f3a4e0929763388a66403de363775db7e90adecb2ba4944b",
++  urls = [
++      "http://mirror.tensorflow.org/github.com/bazelbuild/rules_apple/releases/download/0.31.3/rules_apple.0.31.3.tar.gz",
++      "https://github.com/bazelbuild/rules_apple/releases/download/0.31.3/rules_apple.0.31.3.tar.gz",
++  ],
++)
++
+ http_archive(
+     name = "io_bazel_rules_webtesting",
+     sha256 = "9bb461d5ef08e850025480bab185fd269242d4e533bca75bfb748001ceb343c3",
+__EOF__
+}
+
+
 build() {
   cd "$pkgbase"
 
+  export PYTHONWARNINGS="ignore"  # XXX disable `disutils` deprecation warning in python 3.10
   bazel build tensorboard:tensorboard
   bazel build //tensorboard/pip_package:build_pip_package
 
