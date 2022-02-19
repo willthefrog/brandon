@@ -18,7 +18,7 @@ arch=('x86_64')
 url="http://www.gnu.org/software/emacs/"
 license=('GPL3')
 depends=('gnutls' 'libxml2' 'jansson' 'gpm' 'libgccjit')
-makedepends=('git' 'alsa-lib' 'giflib' 'gtk3' 'webkit2gtk' 'harfbuzz' 'libjpeg-turbo' 'libotf' 'm17n-lib')
+makedepends=('git' 'alsa-lib' 'giflib' 'gtk3' 'harfbuzz' 'libjpeg-turbo' 'libotf' 'm17n-lib')
 source=("$pkgbase::git://git.savannah.gnu.org/emacs.git")
 options=(!strip)
 md5sums=('SKIP')
@@ -65,7 +65,7 @@ build_() {
   if [[ $NOX == "YES" ]]; then
     _conf+=( '--without-x' '--with-x-toolkit=no' '--with-sound=no' '--without-xft' '--without-lcms2' '--without-rsvg' );
   else
-    _conf+=( '--with-pgtk' '--with-xwidgets' '--without-xaw3d' '--with-sound=alsa' );
+    _conf+=( '--with-pgtk' '--without-xwidgets' '--without-xaw3d' '--with-sound=alsa' );
   fi
 
   if [[ $NOCAIRO == "YES" ]] || [[ $NOX == "YES" ]]; then
