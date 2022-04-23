@@ -68,6 +68,7 @@ build() {
         -DBUILD_CUSTOM_PROTOBUF=ON               \
         -DUSE_SYSTEM_EIGEN_INSTALL=OFF           \
         -DBUILD_CAFFE2=OFF                       \
+        -DUSE_BREAKPAD=OFF                       \
         -DATEN_THREADING=NATIVE                  \
         -DUSE_ROCM=OFF                           \
         -DUSE_MPI=OFF                            \
