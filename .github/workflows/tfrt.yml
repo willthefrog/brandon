@@ -5,7 +5,7 @@ on:
       - tfrt/**
       - .github/actions/build/**
       - .github/workflows/tfrt.yml
-  repository_dispatch:
+  workflow_dispatch:
   schedule:
     - cron: '0 18 * * 6'
 

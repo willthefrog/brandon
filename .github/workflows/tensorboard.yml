@@ -5,7 +5,7 @@ on:
       - tensorboard/**
       - .github/actions/build/**
       - .github/workflows/tensorboard.yml
-  repository_dispatch:
+  workflow_dispatch:
   schedule:
     - cron: '0 18 * * 6'
 
