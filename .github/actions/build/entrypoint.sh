@@ -1,5 +1,7 @@
 #!/bin/sh -l
 
+set -e
+
 useradd -Ums /bin/bash arch
 cat > /etc/sudoers.d/passwd <<__EOF__
 ALL ALL = (ALL) NOPASSWD: ALL
