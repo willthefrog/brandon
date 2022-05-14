@@ -38,16 +38,14 @@ build() {
   if [ -e /opt/cuda/bin/g++ ]; then
     export CXX=/opt/cuda/bin/g++
   fi
-  export CFLAGS="-march=skylake -mtune=generic -O2 -pipe -fstack-protector-strong"
-  export CXXFLAGS="-march=skylake -mtune=generic -O2 -pipe -fstack-protector-strong"
+  export CFLAGS="-march=skylake -mtune=generic -O2 -pipe -fstack-protector-strong -fuse-ld=mold"
+  export CXXFLAGS="-march=skylake -mtune=generic -O2 -pipe -fstack-protector-strong -fuse-ld=mold"
   export CUDA_BIN_PATH=/opt/cuda
   export CUDNN_LIB_DIR=/usr/lib
   export CUDNN_INCLUDE_DIR=/usr/include
   export TORCH_NVCC_FLAGS="-Xfatbin -compress-all"
 
   export PYTORCH_BUILD_VERSION=`grep "version = '" setup.py | sed -E "s/version = '(.*)'/\1/"`
-  export LD_PRELOAD='/usr/lib/mold/mold-wrapper.so'
-  export MOLD_PATH='/usr/bin/mold'
   PYTHON3_INC=`python -c "import sysconfig; print(sysconfig.get_config_vars('INCLUDEPY')[0])"`
   PYTHON3_LIB=`python -c "import sysconfig; print('/'.join(sysconfig.get_config_vars('LIBDIR', 'INSTSONAME')))"`
   INSTALL_DIR="$srcdir/$pkgbase/torch"

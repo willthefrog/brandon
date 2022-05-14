@@ -36,8 +36,8 @@ build() {
   if [ -e /opt/cuda/bin/g++ ]; then
     export CXX=/opt/cuda/bin/g++
   fi
-  export LD_PRELOAD='/usr/lib/mold/mold-wrapper.so'
-  export MOLD_PATH='/usr/bin/mold'
+  CFLAGS="${CFLAGS} -fuse-ld=mold" \
+  CXXFLAGS="${CXXFLAGS} -fuse-ld=mold" \
   MAX_JOBS=`nproc` \
   FORCE_CUDA=1 \
   TORCH_CUDA_ARCH_LIST="5.0+PTX;6.1;7.0" \

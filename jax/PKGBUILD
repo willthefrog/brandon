@@ -53,8 +53,8 @@ build() {
   fi
   cuda_ver=`pacman -Qi cuda | grep -oP "Version.*: \K(\d+\.\d+)"`
 
-  export LD_PRELOAD='/usr/lib/mold/mold-wrapper.so'
-  export MOLD_PATH='/usr/bin/mold'
+  CFLAGS="${CFLAGS} -fuse-ld=mold"                                                           \
+  CXXFLAGS="${CXXFLAGS} -fuse-ld=mold"                                                       \
   GCC_HOST_COMPILER_PATH=`readlink /opt/cuda/bin/gcc`                                        \
   HOST_CXX_COMPILER_PATH=`readlink /opt/cuda/bin/g++`                                        \
   TF_CUDA_COMPUTE_CAPABILITIES=6.1,7.0                                                       \
