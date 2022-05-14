@@ -3,7 +3,6 @@ on:
   push:
     paths:
       - emacs/**
-      - libgccjit/**
       - .github/actions/build/**
       - .github/workflows/emacs.yml
   workflow_dispatch:
@@ -27,11 +26,7 @@ jobs:
     - name: Build Packages
       uses: ./.github/actions/build
       with:
-        packages: "libgccjit ${{ github.workflow }}"
-
-    - name: Upload libgccjit
-      run: find -type f -iname "*.pkg.tar.zst" -exec aws s3 cp {} s3://${S3_DEST}/ \;
-      working-directory: libgccjit
+        packages: "${{ github.workflow }}"
 
     - name: Upload emacs
       run: find -type f -iname "*.pkg.tar.zst" -exec aws s3 cp {} s3://${S3_DEST}/ \;
