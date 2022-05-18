@@ -10,8 +10,13 @@ __EOF__
 pacman -Syu --noconfirm
 
 chmod 777 -R .
-for dir in $1; do
+for pkg in $1; do
+    IFS=, read dir install <<< "${pkg}"
     pushd $dir
-    sudo -u arch makepkg -rsif --noconfirm
+    if [ "${install}" == 'y' ]; then
+        sudo -u arch makepkg -rsif --noconfirm
+    else
+        sudo -u arch makepkg -rsf --noconfirm
+    fi
     popd
 done

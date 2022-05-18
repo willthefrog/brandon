@@ -38,7 +38,7 @@ jobs:
     - name: Build Packages
       uses: ./.github/actions/build
       with:
-        packages: "${{ github.workflow }} torchvision"
+        packages: "${{ github.workflow }},y torchvision"
 
     - name: Upload torch
       run: find -type f -iname "*.pkg.tar.zst" -exec aws s3 cp {} s3://${S3_DEST}/ \;
