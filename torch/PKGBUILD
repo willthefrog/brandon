@@ -14,7 +14,7 @@ provides=('python-torch')
 conflicts=('python-torch')
 depends=('python-future' 'python-numpy' 'python-cffi' 'python-yaml' 'python-typing_extensions'
          'cuda' 'cudnn' 'nccl')
-makedepends=('git' 'ninja' 'cmake' 'python-setuptools' 'mold')
+makedepends=('git' 'ninja' 'cmake' 'python-setuptools')
 optdepends=('python-tqdm: model zoo progress bar')
 source=("${pkgbase}::git+https://github.com/pytorch/pytorch.git")
 md5sums=('SKIP')
@@ -38,8 +38,8 @@ build() {
   if [ -e /opt/cuda/bin/g++ ]; then
     export CXX=/opt/cuda/bin/g++
   fi
-  export CFLAGS="-march=skylake -mtune=generic -O2 -pipe -fstack-protector-strong -fuse-ld=mold"
-  export CXXFLAGS="-march=skylake -mtune=generic -O2 -pipe -fstack-protector-strong -fuse-ld=mold"
+  export CFLAGS="-march=skylake -mtune=generic -O2 -pipe -fstack-protector-strong"
+  export CXXFLAGS="-march=skylake -mtune=generic -O2 -pipe -fstack-protector-strong"
   export CUDA_BIN_PATH=/opt/cuda
   export CUDNN_LIB_DIR=/usr/lib
   export CUDNN_INCLUDE_DIR=/usr/include
@@ -50,6 +50,8 @@ build() {
   PYTHON3_LIB=`python -c "import sysconfig; print('/'.join(sysconfig.get_config_vars('LIBDIR', 'INSTSONAME')))"`
   INSTALL_DIR="$srcdir/$pkgbase/torch"
 
+  export CFLAGS="${CFLAGS} -Wno-error=maybe-uninitialized -Wno-error=uninitialized"
+  export CXXFLAGS="${CXXFLAGS} -Wno-error=maybe-uninitialized -Wno-error=uninitialized"
   cmake -GNinja -B build -S .                    \
         -DUSE_FAST_NVCC=ON                       \
         -DUSE_PRECOMPILED_HEADERS=ON             \

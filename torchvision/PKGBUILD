@@ -14,7 +14,7 @@ provides=('python-torchvision')
 conflicts=('python-torchvision')
 replaces=('python-torchvision')
 depends=('python-torch' 'python-six' 'python-pillow')
-makedepends=('git' 'cmake' 'ninja' 'cuda' 'python-setuptools' 'mold')
+makedepends=('git' 'cmake' 'ninja' 'cuda' 'python-setuptools')
 source=("${pkgbase}::git+$url.git")
 md5sums=('SKIP')
 
@@ -36,8 +36,6 @@ build() {
   if [ -e /opt/cuda/bin/g++ ]; then
     export CXX=/opt/cuda/bin/g++
   fi
-  CFLAGS="${CFLAGS} -fuse-ld=mold" \
-  CXXFLAGS="${CXXFLAGS} -fuse-ld=mold" \
   MAX_JOBS=`nproc` \
   FORCE_CUDA=1 \
   TORCH_CUDA_ARCH_LIST="5.0+PTX;6.1;7.0" \
