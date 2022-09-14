@@ -72,6 +72,12 @@ build() {
         -DUSE_ROCM=OFF                           \
         -DUSE_MPI=OFF                            \
         -DUSE_MKLDNN=OFF                         \
+        -DBUILD_TEST=OFF                         \
+        -DUSE_XNNPACK=OFF                        \
+        -DUSE_FBGEMM=OFF                         \
+        -DUSE_QNNPACK=OFF                        \
+        -DUSE_NNPACK=OFF                         \
+        -DUSE_MIOPEN=OFF                         \
         -DUSE_GLOO=ON                            \
         -DUSE_SYSTEM_NCCL=ON
   cmake --build build -j"$(nproc)"
