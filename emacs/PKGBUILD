@@ -58,7 +58,7 @@ build_() {
     # Good luck!
    --without-gconf
    --without-gsettings
-   --with-native-compilation
+   --with-native-compilation=aot
   )
 
   if [[ $NOX == "YES" ]]; then
@@ -98,7 +98,7 @@ build_() {
     export BYTE_COMPILE_EXTRA_FLAGS="--eval '(setq comp-speed 3)'"
   fi
 
-  make NATIVE_FULL_AOT=1 bootstrap -j`nproc`
+  make bootstrap -j`nproc`
 }
 
 package_emacs-git() {
