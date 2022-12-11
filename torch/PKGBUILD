@@ -12,9 +12,10 @@ url="https://pytorch.org/"
 license=('BSD')
 provides=('python-torch')
 conflicts=('python-torch')
-depends=('python-future' 'python-numpy' 'python-cffi' 'python-yaml' 'python-typing_extensions'
+depends=('python-future' 'python-numpy' 'python-cffi' 'python-yaml' 'python-typing_extensions' 'python-sympy'
          'cuda' 'cudnn' 'nccl')
 makedepends=('git' 'ninja' 'cmake' 'python-setuptools')
+optdepends=('python-triton: for the Inductor backend')
 source=("${pkgbase}::git+https://github.com/pytorch/pytorch.git")
 md5sums=('SKIP')
 
