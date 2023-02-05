@@ -21,6 +21,7 @@ pkgver() {
 
 build() {
   cd "$pkgbase"
+  sed -i '/maximum_bazel_version/d' WORKSPACE  # ignore max version limit
 
   export PYTHONWARNINGS="ignore"  # XXX disable `distutils` deprecation warning in python 3.10
   bazel build tensorboard:tensorboard
