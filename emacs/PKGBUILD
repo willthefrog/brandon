@@ -44,7 +44,7 @@ JIT="YES"         # Enable native just-in-time compilation with libgccjit availa
 
 AOT="YES"         # Compile all elisp files provided by upstream.
 
-TRAMPOLINES="YES" # Compile jitted elisp files with trampolines.
+TRAMPOLINES=      # Compile jitted elisp files with trampolines.
 
 CLI=              # CLI only binary.
 
