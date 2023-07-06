@@ -18,6 +18,7 @@ makedepends=('git' 'ninja' 'cmake' 'python-setuptools')
 optdepends=('python-triton: for the Inductor backend')
 source=("${pkgbase}::git+https://github.com/pytorch/pytorch.git")
 md5sums=('SKIP')
+options=(debug strip)
 
 pkgver() {
   cd "$pkgbase"
