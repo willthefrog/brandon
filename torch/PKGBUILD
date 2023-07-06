@@ -2,7 +2,7 @@
 # Maintainer: Yang Zhang <yangzhang@live.com>
 # Upstream URL: https://github.com/pytorch/pytorch
 
-pkgbase=pytorch
+_pkgname=pytorch
 pkgname=python-torch-cuda-git
 pkgver=20200112.r22567.14593f077
 pkgrel=1
@@ -16,22 +16,22 @@ depends=('python-future' 'python-numpy' 'python-cffi' 'python-yaml' 'python-typi
          'cuda' 'cudnn' 'nccl')
 makedepends=('git' 'ninja' 'cmake' 'python-setuptools')
 optdepends=('python-triton: for the Inductor backend')
-source=("${pkgbase}::git+https://github.com/pytorch/pytorch.git")
+source=("${_pkgname}::git+https://github.com/pytorch/pytorch.git")
 md5sums=('SKIP')
 options=(debug strip)
 
 pkgver() {
-  cd "$pkgbase"
+  cd "$_pkgname"
   echo "$(git log -1 --format="%cd" --date=short | sed 's|-||g').r$(git rev-list --count HEAD)".$(git describe --always | sed 's/.*-//g')
 }
 
 prepare() {
-  cd "$pkgbase"
+  cd "$_pkgname"
   git submodule update --init --recursive
 }
 
 build() {
-  cd "$pkgbase"
+  cd "$_pkgname"
 
   if [ -e /opt/cuda/bin/gcc ]; then
     export CC=/opt/cuda/bin/gcc
@@ -49,7 +49,7 @@ build() {
   export PYTORCH_BUILD_VERSION=`grep "version = '" setup.py | sed -E "s/version = '(.*)'/\1/"`
   PYTHON3_INC=`python -c "import sysconfig; print(sysconfig.get_config_vars('INCLUDEPY')[0])"`
   PYTHON3_LIB=`python -c "import sysconfig; print('/'.join(sysconfig.get_config_vars('LIBDIR', 'INSTSONAME')))"`
-  INSTALL_DIR="$srcdir/$pkgbase/torch"
+  INSTALL_DIR="$srcdir/$_pkgname/torch"
 
   export CFLAGS="${CFLAGS} -Wno-error=maybe-uninitialized -Wno-error=uninitialized"
   export CXXFLAGS="${CXXFLAGS} -Wno-error=maybe-uninitialized -Wno-error=uninitialized"
@@ -96,11 +96,11 @@ END
 }
 
 package() {
-  cd "$pkgbase"
+  cd "$_pkgname"
   python setup.py install --skip-build --root="$pkgdir" --optimize=1
   install -m644 -D LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
   # XXX tools/setup_helpers/split_types.py returns full path
-  find "$pkgdir" -type f -iname "*SOURCES.txt" | xargs sed -i "s#$srcdir/$pkgbase/##g"
+  find "$pkgdir" -type f -iname "*SOURCES.txt" | xargs sed -i "s#$srcdir/$_pkgname/##g"
 
   rm -rf "$pkgdir/usr/bin"
   rm -rf "$pkgdir$(python_site_path `which python`)/caffe"
