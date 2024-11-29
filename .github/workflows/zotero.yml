@@ -1,0 +1,39 @@
+name: zotero
+on:
+  push:
+    paths:
+      - zotero/**
+      - .github/workflows/zotero.yml
+  workflow_dispatch:
+  schedule:
+    - cron: '0 18 * * 5'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+      S3_DEST: ${{ secrets.S3_DEST }}
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@master
+
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+      with:
+        platforms: arm64
+
+    - name: Build alarm docker images
+      run: docker build --platform aarch64 -t alarm .
+      working-directory: alarm_docker
+
+    - name: Build Packages
+      run: docker run --network host -v $PWD:/build -w/build alarm ${{ github.workflow }}
+
+    - name: Upload zotero
+      run: find -type f -iname "*.pkg.tar.zst" -exec aws s3 cp {} s3://${S3_DEST}/aarch64/ \;
+      working-directory: ${{ github.workflow }}
