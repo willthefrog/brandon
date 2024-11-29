@@ -98,7 +98,7 @@ fi
 pkgver=30.0.50.162621
 pkgrel=1
 pkgdesc="GNU Emacs. Development master branch."
-arch=('x86_64')
+arch=('x86_64' 'aarch64')
 url="http://www.gnu.org/software/emacs/"
 license=('GPL3')
 depends_nox=('gnutls' 'libxml2' 'jansson')
