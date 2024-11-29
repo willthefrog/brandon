@@ -373,7 +373,7 @@ _conf+=('--program-transform-name=s/\([ec]tags\)/\1.emacs/')
   if [[ $TRAMPOLINES == "YES" ]] && [[ $JIT == "YES" ]] ; then
     make trampolines;
   else
-    make
+    make -j`nproc`
   fi
 
   # Optional documentation formats.
