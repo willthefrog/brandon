@@ -3,6 +3,7 @@ on:
   push:
     paths:
       - emacs/**
+      - alarm_docker/**
       - .github/actions/build/**
       - .github/workflows/emacs.yml
   workflow_dispatch:

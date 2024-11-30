@@ -3,6 +3,7 @@ on:
   push:
     paths:
       - zotero/**
+      - alarm_docker/**
       - .github/workflows/zotero.yml
   workflow_dispatch:
   schedule:
