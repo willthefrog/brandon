@@ -1,0 +1,59 @@
+name: hishtory
+on:
+  push:
+    paths:
+      - hishtory/**
+      - alarm_docker/**
+      - .github/actions/build/**
+      - .github/workflows/hishtory.yml
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 1 * *'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [x86_64, aarch64]
+
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+      S3_DEST: ${{ secrets.S3_DEST }}
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@master
+
+    - name: Set pkgver to latest release
+      run: |
+        version=$(curl -s https://api.github.com/repos/ddworken/hishtory/releases/latest | grep -oP '(?<="tag_name"\: "v)[^"]+')
+        sed -i "s/@@pkgver@@/$version/g" PKGBUILD
+      working-directory: ${{ github.workflow }}
+
+    - name: Build Packages
+      if: matrix.arch == 'x86_64'
+      uses: ./.github/actions/build
+      with:
+        packages: "${{ github.workflow }}"
+
+    - name: Set up QEMU
+      if: matrix.arch == 'aarch64'
+      uses: docker/setup-qemu-action@v3
+      with:
+        platforms: arm64
+
+    - name: Build alarm docker images
+      if: matrix.arch == 'aarch64'
+      run: docker build --platform aarch64 -t alarm .
+      working-directory: alarm_docker
+
+    - name: Build Packages
+      if: matrix.arch == 'aarch64'
+      run: docker run --network host -v $PWD:/build -w/build alarm ${{ github.workflow }}
+
+    - name: Upload hishtory
+      run: find -type f -iname "*.pkg.tar.zst" -exec aws s3 cp {} s3://${S3_DEST}/${{ matrix.arch }}/ \;
+      working-directory: ${{ github.workflow }}

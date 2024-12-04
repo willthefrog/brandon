@@ -1,0 +1,27 @@
+# Maintainer: Yang Zhang <yangzhang@live.com>
+
+pkgname=hishtory
+pkgver=@@pkgver@@
+pkgrel=1
+pkgdesc='Your shell history: synced, queryable, and in context'
+url='https://github.com/ddworken/hishtory'
+license=('MIT')
+provides=(hishtory)
+makedepends=('git')
+arch=('x86_64' 'aarch64')
+source_x86_64=("${pkgname}::git+${url}.git#tag=v${pkgver}" "${pkgname}-linux::${url}/releases/download/v${pkgver}/${pkgname}-linux-amd64")
+source_aarch64=("${pkgname}::git+${url}.git#tag=v${pkgver}" "${pkgname}-linux::${url}/releases/download/v${pkgver}/${pkgname}-linux-arm64")
+sha256sums_x86_64=("SKIP" "SKIP")
+sha256sums_aarch64=("SKIP" "SKIP")
+install='hishtory.install'
+options=('!debug')
+
+package() {
+  cd "${pkgname}"
+  install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+  install -Dm644 client/lib/config.sh "${pkgdir}/usr/share/hishtory/config.sh"
+  install -Dm644 client/lib/config.zsh "${pkgdir}/usr/share/hishtory/config.zsh"
+  install -Dm644 client/lib/config.fish "${pkgdir}/usr/share/hishtory/config.fish"
+
+  install -Dm755 "${srcdir}/${pkgname}-linux" "${pkgdir}/usr/bin/${pkgname}"
+}

@@ -1,0 +1,6 @@
+post_install() {
+  echo "[01;33mInitialize with:[0m"
+  echo "[01;33m$ hishtory init [exisiting-secret][0m"
+  echo "[01;33mthen source the config script in the rc file for your shell:[0m"
+  echo "[01;33m$ source /usr/share/hishtory/config.[sh|zsh|fish][0m"
+}
