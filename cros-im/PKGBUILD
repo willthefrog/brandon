@@ -1,0 +1,33 @@
+# Maintainer: Max Shaughnessy <max@mshaugh.com>
+
+_pkgname=cros-im
+pkgname=${_pkgname}-git
+pkgver=r403.0c2dcc71
+pkgrel=1
+pkgdesc="ChromeOS IMEs over the Wayland protocols"
+arch=('aarch64')
+license=('custom')
+makedepends=('git')
+depends=(gtk3 gtk4 wayland)
+optdepends=("qt5-base: for Qt applications")
+makedepends=(git clang cmake meson ninja gtkmm3 gtkmm-4.0 qt5-tools gtest)
+url="https://chromium.googlesource.com/chromiumos/platform2"
+source=("git+${url}")
+sha1sums=('SKIP')
+
+pkgver() {
+  cd ${srcdir}/platform2/
+  printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
+}
+
+build() {
+  local meson_options=(
+    -D build_gtk4=true
+  )
+  arch-meson platform2/vm_tools/cros_im build "${meson_options[@]}"
+  meson compile -C build
+}
+
+package() {
+  meson install -C build --destdir "$pkgdir"
+}
