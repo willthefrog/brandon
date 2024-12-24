@@ -1,13 +1,13 @@
 # Maintainer: Aaron Keesing <agkphysics at gmail dot com>
 
 pkgname=zotero
-pkgver=7.0.9
+pkgver=7.0.12
 pkgrel=1
 pkgdesc="A free, easy-to-use tool to help you collect, organize, cite, and share your research sources."
 arch=('aarch64')
 url="https://github.com/zotero/zotero"
 license=('AGPL-3.0-or-later')
-depends=('dbus-glib' 'gtk3' 'nss' 'libxt')
+depends=('dbus-glib' 'gtk3' 'nss' 'libxt' 'libjpeg6-turbo')
 makedepends=('npm' 'git' 'zip' 'unzip' 'perl' 'python>=3' 'curl' 'wget' 'rsync' 'nodejs' 'patch')
 source=("zotero.desktop"
         "zotero-client::git+https://github.com/zotero/zotero.git"
