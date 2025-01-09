@@ -95,6 +95,10 @@ package() {
 	install -m644 -D ${srcdir}/${_pkgname}/cros-pulse-config/daemon.conf ${pkgdir}/etc/skel/.config/pulse/daemon.conf
 	install -m644 -D ${srcdir}/${_pkgname}/cros-pulse-config/default.pa ${pkgdir}/etc/skel/.config/pulse/default.pa
 
+	### cros-pipe-config
+	install -m644 -D ${srcdir}/${_pkgname}/cros-pipe-config/pipewire/crostini.conf ${pkgdir}/etc/pipewire/pipewire.conf.d/crostini.conf
+	install -m644 -D ${srcdir}/${_pkgname}/cros-pipe-config/pipewire-pulse/crostini.conf ${pkgdir}/etc/pipewire/pipewire-pulse.conf.d/crostini.conf
+
 	### cros-sommelier
 
 	install -m644 -D ${srcdir}/${_pkgname}/cros-sommelier/sommelierrc ${pkgdir}/etc/sommelierrc
