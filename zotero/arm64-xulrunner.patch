@@ -1,8 +1,8 @@
 diff --git a/app/build.sh b/app/build.sh
-index 6ab6bd6..9a378bc 100755
+index 0659aa6..276aaef 100755
 --- a/app/build.sh
 +++ b/app/build.sh
-@@ -239,8 +239,8 @@ elif [ $BUILD_WIN == 1 ]; then
+@@ -227,8 +227,8 @@ elif [ $BUILD_WIN == 1 ]; then
  	unzip -qj "${WIN_RUNTIME_PATH_PREFIX}win-x64"/omni.ja "hyphenation/*" -d "$app_dir"/hyphenation/
  elif [ $BUILD_LINUX == 1 ]; then
  	# Non-arch-specific files, so just use 64-bit version
@@ -13,7 +13,7 @@ index 6ab6bd6..9a378bc 100755
  fi
  set -e
  cd $omni_dir
-@@ -878,7 +878,7 @@ if [ $BUILD_LINUX == 1 ]; then
+@@ -868,7 +868,7 @@ if [ $BUILD_LINUX == 1 ]; then
  		archs="i686 x86_64"
  	fi
  	
@@ -22,7 +22,7 @@ index 6ab6bd6..9a378bc 100755
  		runtime_path="${LINUX_RUNTIME_PATH_PREFIX}${arch}"
  		
  		# Set up directory
-@@ -911,6 +911,7 @@ if [ $BUILD_LINUX == 1 ]; then
+@@ -901,6 +901,7 @@ if [ $BUILD_LINUX == 1 ]; then
  		cp -RH "$CALLDIR/modules/zotero-libreoffice-integration/install" "$APPDIR/integration/libreoffice"
  		
  		# Copy icons
@@ -30,7 +30,7 @@ index 6ab6bd6..9a378bc 100755
  		cp "$CALLDIR/linux/icons/icon32.png" "$APPDIR/icons/"
  		cp "$CALLDIR/linux/icons/icon64.png" "$APPDIR/icons/"
  		cp "$CALLDIR/linux/icons/icon128.png" "$APPDIR/icons/"
-@@ -922,7 +923,7 @@ if [ $BUILD_LINUX == 1 ]; then
+@@ -912,7 +913,7 @@ if [ $BUILD_LINUX == 1 ]; then
  		
  		# Copy over removed-files and make a precomplete file
  		pushd "$APPDIR"
@@ -40,23 +40,23 @@ index 6ab6bd6..9a378bc 100755
  		if [ ! -s precomplete ]; then
  			echo "precomplete file not created -- aborting" 2>&1
 diff --git a/app/config.sh b/app/config.sh
-index 5d96e78..251b815 100644
+index b23bb3c..347ae70 100644
 --- a/app/config.sh
 +++ b/app/config.sh
 @@ -2,7 +2,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
  
  # Version of Gecko to build with
- GECKO_VERSION_MAC="128.5.0esr"
--GECKO_VERSION_LINUX="128.5.0esr"
-+GECKO_VERSION_LINUX="128.5.1-1.el9"
- GECKO_VERSION_WIN="128.5.0esr"
+ GECKO_VERSION_MAC="128.6.0esr"
+-GECKO_VERSION_LINUX="128.6.0esr"
++GECKO_VERSION_LINUX="128.6.0-1.el9"
+ GECKO_VERSION_WIN="128.6.0esr"
  RUST_VERSION=1.78.0
  
 diff --git a/app/scripts/fetch_xulrunner b/app/scripts/fetch_xulrunner
-index ee94270..27cdbd3 100755
+index cbebf96..3addd89 100755
 --- a/app/scripts/fetch_xulrunner
 +++ b/app/scripts/fetch_xulrunner
-@@ -158,15 +158,6 @@ function modify_omni {
+@@ -109,15 +109,6 @@ function modify_omni {
  	# Continue using app.update.auto in prefs.js on Windows
  	replace_line 'PER_INSTALLATION_PREFS_PLATFORMS = \["win"\]' 'PER_INSTALLATION_PREFS_PLATFORMS = []' modules/UpdateUtils.sys.mjs
  	
@@ -72,7 +72,7 @@ index ee94270..27cdbd3 100755
  	# Avoid console warning about resource://gre/modules/FxAccountsCommon.js
  	replace_line 'const logins = this._data.logins;' 'const logins = this._data.logins; if (this._data.logins.length != -1) return;' modules/LoginStore.sys.mjs
  	
-@@ -608,28 +599,29 @@ if [ $BUILD_LINUX == 1 ]; then
+@@ -565,28 +556,29 @@ if [ $BUILD_LINUX == 1 ]; then
  	else
  		arches="i686 x86_64"
  	fi
