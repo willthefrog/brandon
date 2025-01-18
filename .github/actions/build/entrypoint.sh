@@ -2,12 +2,14 @@
 
 set -e
 
+pacman -Syu --noconfirm base-devel sudo
+
 useradd -Ums /bin/bash arch
 cat > /etc/sudoers.d/passwd <<__EOF__
 ALL ALL = (ALL) NOPASSWD: ALL
 __EOF__
 
-pacman -Syu --noconfirm
+sed -i 's/pkg.tar.xz/pkg.tar.zst/g' /etc/makepkg.conf
 
 chmod 777 -R .
 for pkg in $1; do

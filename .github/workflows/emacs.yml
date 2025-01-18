@@ -3,7 +3,6 @@ on:
   push:
     paths:
       - emacs/**
-      - alarm_docker/**
       - .github/actions/build/**
       - .github/workflows/emacs.yml
   workflow_dispatch:
@@ -12,10 +11,11 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
     strategy:
       matrix:
-        arch: [x86_64, aarch64]
+        machine: [x86_64, aarch64]
+
+    runs-on: ${{ matrix.machine == 'aarch64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
 
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -27,27 +27,15 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@master
 
+    - name: Replace base image for arm64 build
+      if: matrix.machine == 'aarch64'
+      run: sed -i 's#archlinux:base-devel#agners/archlinuxarm#g' ./.github/actions/build/Dockerfile
+
     - name: Build Packages
-      if: matrix.arch == 'x86_64'
       uses: ./.github/actions/build
       with:
         packages: "${{ github.workflow }}"
 
-    - name: Set up QEMU
-      if: matrix.arch == 'aarch64'
-      uses: docker/setup-qemu-action@v3
-      with:
-        platforms: arm64
-
-    - name: Build alarm docker images
-      if: matrix.arch == 'aarch64'
-      run: docker build --platform aarch64 -t alarm .
-      working-directory: alarm_docker
-
-    - name: Build Packages
-      if: matrix.arch == 'aarch64'
-      run: docker run --network host -v $PWD:/build -w/build alarm ${{ github.workflow }}
-
     - name: Upload emacs
-      run: find -type f -iname "*.pkg.tar.zst" -exec aws s3 cp {} s3://${S3_DEST}/${{ matrix.arch }}/ \;
+      run: find -type f -iname "*.pkg.tar.zst" -exec aws s3 cp {} s3://${S3_DEST}/${{ matrix.machine }}/ \;
       working-directory: ${{ github.workflow }}
