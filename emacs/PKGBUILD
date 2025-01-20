@@ -269,6 +269,7 @@ build() {
 # If you insist you'll need to read that bug report in *full*.
 # Good luck!
    --without-gconf
+   --disable-build-details
   )
 
 ################################################################################
