@@ -396,6 +396,14 @@ package() {
   if [[ $DOCS_HTML == "YES" ]]; then make DESTDIR="$pkgdir/" install-html; fi
   if [[ $DOCS_PDF == "YES" ]]; then make DESTDIR="$pkgdir/" install-pdf; fi
 
+  # HACK: fix app icon in WSLg for Non-GTK (e.g. lucid) build
+  # App id is set to "Emacs" where as the gtk one fallbacks to "emacs"
+  # and x11 does not seem to respect `StartupWMClass` in .desktop files
+  # see https://gitlab.gnome.org/GNOME/gnome-shell/-/issues/5739#note_1527716
+  if [[ ! $GTK3 == "YES" ]] && [[ ! $PGTK == "YES" ]] ; then
+    cp "$pkgdir"/usr/share/applications/emacs.desktop "$pkgdir"/usr/share/applications/Emacs.desktop
+  fi
+
   # fix user/root permissions on usr/share files
   find "$pkgdir"/usr/share/emacs/ | xargs chown root:root
 
@@ -404,7 +412,6 @@ package() {
   chmod 775 "$pkgdir"/var/games
   chmod 775 "$pkgdir"/var/games/emacs
   chown -R root:games "$pkgdir"/var/games
-
 }
 
 ################################################################################
