@@ -87,6 +87,15 @@ DOCS_PDF=         # Generate and install pdf documentation. You need
 
 NOGZ="YES"        # Don't compress .el files. (Gain is neglible, IMHO)
 
+# use pgtk build for Crostini, lucid build can be problematic:
+# 1) not pick up the correct app icon, the WSLg fix does not work
+# 2) block copy/paste is buggy
+if [[ $CARCH == "aarch64" ]] ; then
+  PGTK="YES"
+  LUCID=""
+  XI2=""
+fi
+
 ################################################################################
 
 ################################################################################
