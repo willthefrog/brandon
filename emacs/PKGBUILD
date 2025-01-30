@@ -314,7 +314,7 @@ if [[ $CLI == "YES" ]]; then
 elif [[ $NOTKIT == "YES" ]]; then
   _conf+=( '--with-x-toolkit=no' '--without-toolkit-scroll-bars' '--without-xft' '--without-xaw3d' );
 elif [[ $LUCID == "YES" ]]; then
-  _conf+=( '--with-x-toolkit=lucid' '--with-xft' '--with-xaw3d' );
+  _conf+=( '--with-x-toolkit=lucid' '--without-xft' );
 elif [[ $GTK3 == "YES" ]]; then
   _conf+=( '--with-x-toolkit=gtk3' '--without-xaw3d' );
 elif [[ $PGTK == "YES" ]]; then
@@ -325,7 +325,7 @@ if [[ ! $PGTK == "YES" ]]; then
     _conf+=( '--without-gsettings' ) :
 fi
 
-if [[ $NOCAIRO == "YES" || $CLI == "YES" || $NOTKIT == "YES" || $LUCID == "YES" ]]; then
+if [[ $NOCAIRO == "YES" || $CLI == "YES" || $NOTKIT == "YES" ]]; then
   _conf+=( '--without-cairo' );
 fi
 
