@@ -77,7 +77,7 @@ index 1a71438..8ccff82 100755
  		arches="i686 x86_64"
  	fi
 -	for arch in $arches; do
-+	for arch in aarche64; do
++	for arch in aarch64; do
  		xdir="firefox-$arch"
  		rm -rf $xdir
  		
