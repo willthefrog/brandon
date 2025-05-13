@@ -16,9 +16,9 @@ for pkg in $1; do
     IFS=, read dir install <<< "${pkg}"
     pushd $dir
     if [ "${install}" == 'y' ]; then
-        sudo -u arch makepkg -rsif --noconfirm
+        sudo -u arch makepkg -rsifA --noconfirm
     else
-        sudo -u arch makepkg -rsf --noconfirm
+        sudo -u arch makepkg -rsfA --noconfirm
     fi
     popd
 done
