@@ -1,5 +1,5 @@
 diff --git a/app/build.sh b/app/build.sh
-index 0bf507a..1a1e4ab 100755
+index cc378dc..69e92a7 100755
 --- a/app/build.sh
 +++ b/app/build.sh
 @@ -227,8 +227,8 @@ elif [ $BUILD_WIN == 1 ]; then
@@ -13,7 +13,7 @@ index 0bf507a..1a1e4ab 100755
  fi
  set -e
  cd $omni_dir
-@@ -906,7 +906,7 @@ if [ $BUILD_LINUX == 1 ]; then
+@@ -928,7 +928,7 @@ if [ $BUILD_LINUX == 1 ]; then
  		archs="i686 x86_64"
  	fi
  	
@@ -22,7 +22,7 @@ index 0bf507a..1a1e4ab 100755
  		runtime_path="${LINUX_RUNTIME_PATH_PREFIX}${arch}"
  		
  		# Set up directory
-@@ -939,6 +939,7 @@ if [ $BUILD_LINUX == 1 ]; then
+@@ -961,6 +961,7 @@ if [ $BUILD_LINUX == 1 ]; then
  		cp -RH "$CALLDIR/modules/zotero-libreoffice-integration/install" "$APPDIR/integration/libreoffice"
  		
  		# Copy icons
@@ -30,7 +30,7 @@ index 0bf507a..1a1e4ab 100755
  		cp "$CALLDIR/linux/icons/icon32.png" "$APPDIR/icons/"
  		cp "$CALLDIR/linux/icons/icon64.png" "$APPDIR/icons/"
  		cp "$CALLDIR/linux/icons/icon128.png" "$APPDIR/icons/"
-@@ -950,7 +951,7 @@ if [ $BUILD_LINUX == 1 ]; then
+@@ -972,7 +973,7 @@ if [ $BUILD_LINUX == 1 ]; then
  		
  		# Copy over removed-files and make a precomplete file
  		pushd "$APPDIR"
@@ -40,20 +40,20 @@ index 0bf507a..1a1e4ab 100755
  		if [ ! -s precomplete ]; then
  			echo "precomplete file not created -- aborting" 2>&1
 diff --git a/app/config.sh b/app/config.sh
-index 01e8007..1e8cd51 100644
+index 9d9c7af..633689f 100644
 --- a/app/config.sh
 +++ b/app/config.sh
 @@ -2,7 +2,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
  
  # Version of Gecko to build with
- GECKO_VERSION_MAC="128.7.0esr"
--GECKO_VERSION_LINUX="128.6.0esr"
-+GECKO_VERSION_LINUX="128.6.0-1.el9"
- GECKO_VERSION_WIN="128.6.0esr"
+ GECKO_VERSION_MAC="128.9.0esr"
+-GECKO_VERSION_LINUX="128.9.0esr"
++GECKO_VERSION_LINUX="128.9.0-2.el9"
+ GECKO_VERSION_WIN="128.9.0esr"
  RUST_VERSION=1.78.0
  
 diff --git a/app/scripts/fetch_xulrunner b/app/scripts/fetch_xulrunner
-index 854473a..a64ac1a 100755
+index 1a71438..8ccff82 100755
 --- a/app/scripts/fetch_xulrunner
 +++ b/app/scripts/fetch_xulrunner
 @@ -120,15 +120,6 @@ function modify_omni {
@@ -72,7 +72,7 @@ index 854473a..a64ac1a 100755
  	# Avoid console warning about resource://gre/modules/FxAccountsCommon.js
  	replace_line 'const logins = this._data.logins;' 'const logins = this._data.logins; if (this._data.logins.length != -1) return;' modules/LoginStore.sys.mjs
  	
-@@ -576,28 +567,29 @@ if [ $BUILD_LINUX == 1 ]; then
+@@ -602,28 +593,29 @@ if [ $BUILD_LINUX == 1 ]; then
  	else
  		arches="i686 x86_64"
  	fi
