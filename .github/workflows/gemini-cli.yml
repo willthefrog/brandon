@@ -1,0 +1,41 @@
+name: gemini-cli
+on:
+  push:
+    paths:
+      - gemini-cli/**
+      - .github/actions/build/**
+      - .github/workflows/gemini-cli.yml
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 1 * *'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+      S3_DEST: ${{ secrets.S3_DEST }}
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@master
+
+    - name: Set pkgver to latest release
+      run: |
+        version=$(curl -s https://api.github.com/repos/google-gemini/gemini-cli/releases/latest | grep -oP '(?<="tag_name"\: "v)[^"]+')
+        sed -i "s/@@pkgver@@/$version/g" PKGBUILD
+      working-directory: ${{ github.workflow }}
+
+    - name: Build Packages
+      uses: ./.github/actions/build
+      with:
+        packages: "${{ github.workflow }}"
+
+    - name: Upload gemini-cli
+      run: |
+        find -type f -iname "*.pkg.tar.zst" -exec aws s3 cp {} s3://${S3_DEST}/x86_64/ \;
+        find -type f -iname "*.pkg.tar.zst" -exec aws s3 cp {} s3://${S3_DEST}/aarch64/ \;
+      working-directory: ${{ github.workflow }}
