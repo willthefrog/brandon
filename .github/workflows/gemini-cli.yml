@@ -25,7 +25,7 @@ jobs:
 
     - name: Set pkgver to latest release
       run: |
-        version=$(curl -s https://api.github.com/repos/google-gemini/gemini-cli/releases/latest | grep -oP '(?<="tag_name"\: "v)[^"]+')
+        version=$(curl -s https://registry.npmjs.org/@google/gemini-cli/latest | grep -oP '(?<="version"\:")[^"]+')
         sed -i "s/@@pkgver@@/$version/g" PKGBUILD
       working-directory: ${{ github.workflow }}
 
