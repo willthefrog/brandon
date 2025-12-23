@@ -10,6 +10,7 @@ ALL ALL = (ALL) NOPASSWD: ALL
 __EOF__
 
 sed -i 's/pkg.tar.xz/pkg.tar.zst/g' /etc/makepkg.conf
+sed -i 's/#DisableSandboxFilesystem/DisableSandboxFilesystem/g' /etc/pacman.conf
 
 chmod 777 -R .
 for pkg in $1; do
