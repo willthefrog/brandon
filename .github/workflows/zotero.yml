@@ -3,6 +3,7 @@ on:
   push:
     paths:
       - zotero/**
+      - .github/actions/build/**
       - .github/workflows/zotero.yml
   workflow_dispatch:
   schedule:

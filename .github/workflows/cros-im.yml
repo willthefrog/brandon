@@ -3,6 +3,7 @@ on:
   push:
     paths:
       - cros-im/**
+      - .github/actions/build/**
       - .github/workflows/cros-im.yml
   workflow_dispatch:
   schedule:
